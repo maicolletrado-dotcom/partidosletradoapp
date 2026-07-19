@@ -727,6 +727,8 @@ function rachaLabel(s){
 /* ---------- Render principal ---------- */
 function render(){
   const app = document.getElementById('app');
+  const oldModal = document.getElementById('modal-overlay');
+  if(oldModal) oldModal.remove();
   if(!loaded){ app.innerHTML = '<div class="empty-state">Cargando datos…</div>'; return; }
 
   const j = getCurrentJornada();
