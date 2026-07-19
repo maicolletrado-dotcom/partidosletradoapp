@@ -392,32 +392,57 @@ let lastSaveError = '';
 let lastLoadError = '';
 let lastSaveOk = null;
 
+/* Firebase omite por completo las listas/objetos vacíos (p.ej. jornadas: [] no
+   se guarda). Esta función rellena cualquier lista/objeto esperado que venga
+   faltante, para que el resto de la app siempre reciba un estado completo. */
+function normalizeState(raw){
+  const s = (raw && typeof raw === 'object') ? raw : {};
+  const jornadas = Array.isArray(s.jornadas) ? s.jornadas.map(j => ({
+    ...j,
+    equipos: Array.isArray(j.equipos) ? j.equipos.map(e => ({
+      ...e, jugadores: Array.isArray(e.jugadores) ? e.jugadores : []
+    })) : [],
+    partidos: Array.isArray(j.partidos) ? j.partidos.map(p => ({
+      ...p,
+      goles: Array.isArray(p.goles) ? p.goles : [],
+      tarjetas: Array.isArray(p.tarjetas) ? p.tarjetas : [],
+      timer: p.timer || { running:false, startedAt:null, accumulatedSeconds:0 }
+    })) : []
+  })) : [];
+  return {
+    currentJornadaId: s.currentJornadaId ?? null,
+    jornadas,
+    jugadoresFrecuentes: Array.isArray(s.jugadoresFrecuentes) ? s.jugadoresFrecuentes : []
+  };
+}
+
 async function loadState(){
   if(!firebaseReady){
     lastLoadError = 'Firebase no está configurado todavía. Revisa que hayas pegado tu firebaseConfig en el código.';
-    if(!Array.isArray(state.jugadoresFrecuentes)) state.jugadoresFrecuentes = [];
+    state = normalizeState(state);
     loaded = true; render(); return;
   }
   try{
     const snap = await get(dbRef);
     const val = snap.val();
-    if(val && Array.isArray(val.jornadas)) state = val;
+    if(val) state = normalizeState(val);
+    else state = normalizeState(state);
   }catch(e){
     lastLoadError = (e && (e.message || e.toString())) || 'Error desconocido al cargar.';
     console.error('Error al cargar desde Firebase:', e);
+    state = normalizeState(state);
   }
-  if(!Array.isArray(state.jugadoresFrecuentes)) state.jugadoresFrecuentes = [];
   loaded = true;
   render();
 
   // Escucha cambios en vivo (cuando el admin u otra pestaña/celular guarda algo)
   onValue(dbRef, (snapshot) => {
     const val = snapshot.val();
-    if(!val || !Array.isArray(val.jornadas)) return;
+    if(!val) return;
     if(applyingRemote) return; // evita procesar el eco de nuestro propio guardado
-    if(JSON.stringify(val) === JSON.stringify(state)) return;
-    state = val;
-    if(!Array.isArray(state.jugadoresFrecuentes)) state.jugadoresFrecuentes = [];
+    const nuevo = normalizeState(val);
+    if(JSON.stringify(nuevo) === JSON.stringify(state)) return;
+    state = nuevo;
     render();
   });
 }
