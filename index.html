@@ -278,7 +278,7 @@ body{
 <body>
 <div id="app">Cargando…</div>
 
-<script>
+<script type="module">
 /* =========================================================
    PARTIDOS LETRADO APP
    Formato: cada jornada tiene 2 o 3 equipos. Se juegan
@@ -286,11 +286,42 @@ body{
    jornadas de 3 equipos, el que pierde sale y entra el que
    esperaba. Gana la jornada quien más partidos acumule
    (empate compartido si hay igualdad).
-   Almacenamiento compartido vía window.storage (clave única)
+
+   ALMACENAMIENTO: Firebase Realtime Database (gratuito).
+   Reemplaza a window.storage porque esta app ahora vive en
+   GitHub Pages / un sitio real, y window.storage solo
+   funciona dentro de la ventana de Claude.
    ========================================================= */
 
-const STORAGE_KEY = 'partidos-letrado-data-v2';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* ============================================================
+   👉 PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE (ver instrucciones
+   que te di en el chat para crearla gratis en 5 minutos).
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBSgZFCOHPgmcSublz8oBOY_iox1X3XpLo",
+  authDomain: "partidos-letrado.firebaseapp.com",
+  databaseURL: "https://partidos-letrado-default-rtdb.firebaseio.com",
+  projectId: "partidos-letrado",
+  storageBucket: "partidos-letrado.firebasestorage.app",
+  messagingSenderId: "116454202144",
+  appId: "1:116454202144:web:efbd79599b14146a8a1545"
+};
+
+const DB_PATH = 'partidosLetradoData';
 const ADMIN_PASSWORD = 'Letrado2026'; // clave simple del admin (solo control de cliente)
+
+let firebaseApp = null, db = null, dbRef = null, firebaseReady = false;
+try{
+  firebaseApp = initializeApp(firebaseConfig);
+  db = getDatabase(firebaseApp);
+  dbRef = ref(db, DB_PATH);
+  firebaseReady = true;
+}catch(e){
+  console.error('No se pudo inicializar Firebase:', e);
+}
 
 const SWATCHES = [
   {n:'Azul', c:'#3a86ff'}, {n:'Rojo', c:'#e63946'}, {n:'Amarillo', c:'#f2b705'},
@@ -353,20 +384,77 @@ function nextJornadaNumber(){
   return Math.max(...state.jornadas.map(j => j.numero||0)) + 1;
 }
 
-/* ---------- Persistencia ---------- */
+/* ---------- Persistencia (Firebase Realtime Database) ---------- */
+let applyingRemote = false;
+let saveInFlight = false;
+let saveQueued = false;
+let lastSaveError = '';
+let lastLoadError = '';
+let lastSaveOk = null;
+
 async function loadState(){
+  if(!firebaseReady){
+    lastLoadError = 'Firebase no está configurado todavía. Revisa que hayas pegado tu firebaseConfig en el código.';
+    if(!Array.isArray(state.jugadoresFrecuentes)) state.jugadoresFrecuentes = [];
+    loaded = true; render(); return;
+  }
   try{
-    const res = await window.storage.get(STORAGE_KEY, true);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
-      if(parsed && Array.isArray(parsed.jornadas)) state = parsed;
-    }
+    const snap = await get(dbRef);
+    const val = snap.val();
+    if(val && Array.isArray(val.jornadas)) state = val;
   }catch(e){
-    console.log('No hay datos previos o error al cargar:', e);
+    lastLoadError = (e && (e.message || e.toString())) || 'Error desconocido al cargar.';
+    console.error('Error al cargar desde Firebase:', e);
   }
   if(!Array.isArray(state.jugadoresFrecuentes)) state.jugadoresFrecuentes = [];
   loaded = true;
   render();
+
+  // Escucha cambios en vivo (cuando el admin u otra pestaña/celular guarda algo)
+  onValue(dbRef, (snapshot) => {
+    const val = snapshot.val();
+    if(!val || !Array.isArray(val.jornadas)) return;
+    if(applyingRemote) return; // evita procesar el eco de nuestro propio guardado
+    if(JSON.stringify(val) === JSON.stringify(state)) return;
+    state = val;
+    if(!Array.isArray(state.jugadoresFrecuentes)) state.jugadoresFrecuentes = [];
+    render();
+  });
+}
+
+async function saveState(){
+  lastLocalWrite = Date.now();
+  if(saveInFlight){ saveQueued = true; return; }
+  saveInFlight = true;
+  const snapshot = JSON.parse(JSON.stringify(state));
+  const delays = [0, 500, 1500, 3000];
+  let ok = false;
+  for(let i=0;i<delays.length && !ok;i++){
+    if(delays[i]) await new Promise(r=>setTimeout(r, delays[i]));
+    try{
+      if(!firebaseReady){
+        throw new Error('Firebase no está configurado (falta pegar firebaseConfig en el código).');
+      }
+      applyingRemote = true;
+      await set(dbRef, snapshot);
+      ok = true;
+    }catch(e){
+      lastSaveError = (e && (e.message || e.toString())) || 'Error desconocido';
+      console.error('Intento '+(i+1)+' de guardado falló:', e);
+    } finally {
+      applyingRemote = false;
+    }
+  }
+  saveInFlight = false;
+  lastSaveOk = ok;
+  if(!ok){
+    showToast('⚠️ No se pudo guardar. Ver detalle en Panel admin.');
+    if(isAdmin && activeTab === 'marcador') render();
+  }
+  if(saveQueued){
+    saveQueued = false;
+    saveState();
+  }
 }
 
 /* ---------- Jugadores habituales (plantilla) ---------- */
@@ -385,47 +473,6 @@ function removeJugadorFrecuente(name){
       modal = null; saveState(); render();
     } };
   render();
-}
-let saveInFlight = false;
-let saveQueued = false;
-async function saveState(){
-  lastLocalWrite = Date.now();
-  if(saveInFlight){ saveQueued = true; return; }
-  saveInFlight = true;
-  const snapshot = JSON.stringify(state);
-  const delays = [0, 500, 1500, 3000];
-  let ok = false;
-  for(let i=0;i<delays.length && !ok;i++){
-    if(delays[i]) await new Promise(r=>setTimeout(r, delays[i]));
-    try{
-      const res = await window.storage.set(STORAGE_KEY, snapshot, true);
-      if(res){ ok = true; }
-      else console.error('Intento '+(i+1)+': guardado devolvió null.');
-    }catch(e){
-      console.error('Intento '+(i+1)+' de guardado falló:', e);
-    }
-  }
-  saveInFlight = false;
-  if(!ok){
-    showToast('⚠️ No se pudo guardar tras varios intentos. Revisa tu conexión y vuelve a intentar la acción.');
-  }
-  if(saveQueued){
-    saveQueued = false;
-    saveState();
-  }
-}
-async function pollRemote(){
-  if(Date.now() - lastLocalWrite < 2500) return;
-  try{
-    const res = await window.storage.get(STORAGE_KEY, true);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
-      if(parsed && JSON.stringify(parsed) !== JSON.stringify(state)){
-        state = parsed;
-        render();
-      }
-    }
-  }catch(e){ /* silencioso: puede que aún no exista la clave */ }
 }
 
 let toastTimer = null;
@@ -1083,9 +1130,23 @@ function renderHistorial(){
 }
 
 function renderAdminZone(){
+  let diag = '';
+  if(lastLoadError){
+    diag += `<div class="modal-error" style="margin-top:10px;background:rgba(230,57,70,0.1);padding:10px;border-radius:8px;">
+      <b>Error al cargar datos:</b><br>${escapeHtml(lastLoadError)}
+    </div>`;
+  }
+  if(lastSaveOk === false){
+    diag += `<div class="modal-error" style="margin-top:10px;background:rgba(230,57,70,0.1);padding:10px;border-radius:8px;">
+      <b>Último error de guardado:</b><br>${escapeHtml(lastSaveError)}
+    </div>`;
+  } else if(lastSaveOk === true){
+    diag += `<div class="hint" style="margin-top:10px;color:var(--green-go);">✓ Último guardado exitoso.</div>`;
+  }
   return `<div class="section-gap card">
     <div class="card-title">⚙️ Panel admin</div>
     <div class="hint">Solo tú puedes editar el marcador. Los demás familiares ven todo automáticamente en modo lectura.</div>
+    ${diag}
     <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn btn-outline btn-sm" id="btn-logout-admin">Salir del modo admin</button>
       <button class="btn btn-danger btn-sm" id="btn-reset-all">Borrar todos los datos</button>
@@ -1254,7 +1315,6 @@ function attachHandlers(){
 
 /* ---------- Init ---------- */
 loadState();
-setInterval(pollRemote, 4000);
 setInterval(() => {
   const j = getCurrentJornada();
   const p = getPartidoActual(j);
