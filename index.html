@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Partidos Letrado APP</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root{
+  --bg: #0a1f14;
+  --bg-alt: #12301f;
+  --bg-panel: #163a26;
+  --line: rgba(241,250,238,0.10);
+  --line-strong: rgba(241,250,238,0.22);
+  --ink: #f1faee;
+  --ink-dim: #9fc2ae;
+  --ink-dimmer: #6f9382;
+  --gold: #f2b705;
+  --gold-glow: rgba(242,183,5,0.35);
+  --red-card: #e63946;
+  --green-go: #52b788;
+  --blue: #3a86ff;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 40px, transparent 40px, transparent 80px),
+    radial-gradient(ellipse at top, #123321 0%, var(--bg) 60%);
+  color:var(--ink);
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+#app{max-width:920px;margin:0 auto;padding:14px 14px 60px;}
+
+/* ---------- Header ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 2px 18px;}
+.brand{display:flex;flex-direction:column;line-height:1;}
+.brand-name{
+  font-family:'Bebas Neue',cursive;
+  font-size:30px;
+  letter-spacing:1px;
+  color:var(--ink);
+}
+.brand-name span{color:var(--gold);}
+.brand-sub{font-size:11px;color:var(--ink-dimmer);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px;}
+
+.admin-btn{
+  background:transparent;border:1px solid var(--line-strong);color:var(--ink-dim);
+  padding:8px 14px;border-radius:100px;font-family:'Inter';font-size:12px;font-weight:600;
+  cursor:pointer;letter-spacing:0.3px;display:flex;align-items:center;gap:6px;transition:.15s;
+}
+.admin-btn:hover{border-color:var(--gold);color:var(--gold);}
+.admin-btn.active{background:var(--gold);border-color:var(--gold);color:#1a1400;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ink-dimmer);}
+.dot.on{background:var(--green-go);box-shadow:0 0 8px var(--green-go);}
+
+/* ---------- Tabs ---------- */
+.tabs{display:flex;gap:6px;margin-bottom:18px;overflow-x:auto;padding-bottom:2px;}
+.tab-btn{
+  flex:0 0 auto;background:var(--bg-panel);border:1px solid var(--line);color:var(--ink-dim);
+  padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:.15s;
+}
+.tab-btn.active{background:var(--gold);color:#1a1400;border-color:var(--gold);}
+
+/* ---------- Scoreboard (signature element) ---------- */
+.jumbotron{
+  position:relative;border-radius:18px;overflow:hidden;
+  background:linear-gradient(180deg,#0d2617 0%,#081c10 100%);
+  border:1px solid var(--line-strong);
+  padding:22px 16px 18px;margin-bottom:16px;
+  box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
+}
+.jumbotron::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background: radial-gradient(ellipse 60% 70% at 50% -10%, var(--gold-glow) 0%, transparent 60%);
+  opacity:0.5;
+}
+.jumbotron.goal-flash::before{ animation: flash 0.9s ease-out; }
+@keyframes flash{
+  0%{opacity:0.5;}
+  20%{opacity:1;background:radial-gradient(ellipse 90% 90% at 50% 40%, var(--gold-glow) 0%, transparent 70%);}
+  100%{opacity:0.5;}
+}
+.jm-status{
+  text-align:center;font-family:'JetBrains Mono';font-size:11px;letter-spacing:2px;color:var(--ink-dimmer);
+  text-transform:uppercase;margin-bottom:10px;position:relative;z-index:1;
+}
+.jm-status .live-chip{color:var(--red-card);font-weight:700;}
+.jm-status .live-chip::before{content:'● ';animation:blink 1.4s infinite;}
+@keyframes blink{50%{opacity:0.25;}}
+
+.jm-row{display:flex;align-items:center;justify-content:center;gap:6px;position:relative;z-index:1;}
+.jm-team{flex:1;text-align:center;min-width:0;}
+.jm-team-name{
+  font-family:'Bebas Neue';font-size:clamp(20px,5.5vw,32px);letter-spacing:0.5px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px;
+}
+.jm-team-swatch{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:7px;vertical-align:middle;}
+.jm-score{
+  font-family:'Bebas Neue';font-size:clamp(48px,14vw,80px);line-height:1;color:var(--gold);
+  min-width:56px;text-align:center;text-shadow:0 0 24px var(--gold-glow);
+}
+.jm-score.cap-reached{color:var(--green-go);text-shadow:0 0 24px rgba(82,183,136,0.5);}
+.jm-sep{font-family:'Bebas Neue';font-size:clamp(32px,8vw,52px);color:var(--ink-dimmer);padding:0 2px;}
+.jm-clock{
+  text-align:center;margin-top:14px;font-family:'JetBrains Mono';font-size:26px;letter-spacing:2px;
+  color:var(--ink);position:relative;z-index:1;
+}
+.jm-clock .lbl{display:block;font-size:10px;letter-spacing:2px;color:var(--ink-dimmer);text-transform:uppercase;margin-bottom:4px;}
+.jm-controls{display:flex;justify-content:center;gap:8px;margin-top:12px;position:relative;z-index:1;flex-wrap:wrap;}
+.jm-waiting{
+  text-align:center;font-size:12px;color:var(--ink-dimmer);margin-top:10px;position:relative;z-index:1;
+  font-family:'JetBrains Mono';letter-spacing:0.5px;
+}
+.jm-cap-banner{
+  text-align:center;background:rgba(82,183,136,0.15);border:1px solid var(--green-go);color:var(--green-go);
+  border-radius:8px;padding:7px;font-size:12px;font-weight:700;margin-top:10px;position:relative;z-index:1;
+}
+
+/* ---------- Mini tabla de la jornada ---------- */
+.mini-tabla{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;position:relative;z-index:1;}
+.mini-tabla-item{
+  flex:1;min-width:100px;background:rgba(0,0,0,0.25);border:1px solid var(--line);border-radius:9px;
+  padding:8px 10px;text-align:center;
+}
+.mini-tabla-name{font-size:11px;color:var(--ink-dim);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mini-tabla-wins{font-family:'Bebas Neue';font-size:22px;color:var(--gold);}
+.mini-tabla-wins-lbl{font-size:9px;color:var(--ink-dimmer);text-transform:uppercase;letter-spacing:1px;}
+
+/* ---------- Buttons ---------- */
+.btn{
+  border:none;border-radius:9px;font-family:'Inter';font-weight:700;font-size:13px;
+  padding:9px 15px;cursor:pointer;transition:.15s;letter-spacing:0.2px;
+}
+.btn-gold{background:var(--gold);color:#1a1400;}
+.btn-gold:hover{filter:brightness(1.08);}
+.btn-outline{background:transparent;border:1px solid var(--line-strong);color:var(--ink);}
+.btn-outline:hover{border-color:var(--ink);}
+.btn-danger{background:transparent;border:1px solid var(--red-card);color:var(--red-card);}
+.btn-danger:hover{background:var(--red-card);color:var(--ink);}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:7px;}
+.btn:disabled{opacity:0.35;cursor:not-allowed;}
+.btn-block{width:100%;margin-top:8px;}
+
+/* ---------- Cards / Panels ---------- */
+.card{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:14px;
+  padding:16px;margin-bottom:14px;
+}
+.card-title{
+  font-family:'Bebas Neue';font-size:18px;letter-spacing:0.5px;color:var(--ink);
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+}
+.card-title .swatch{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:8px;vertical-align:middle;}
+
+.roster-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:600px){.roster-grid{grid-template-columns:1fr;}}
+
+.player-row{
+  display:flex;align-items:center;gap:8px;padding:8px 6px;border-bottom:1px solid var(--line);font-size:13px;flex-wrap:wrap;
+}
+.player-row:last-child{border-bottom:none;}
+.player-name{flex:1;min-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;}
+.goal-count{font-family:'JetBrains Mono';color:var(--gold);font-weight:700;font-size:13px;min-width:16px;text-align:center;}
+.mini-select{
+  background:var(--bg-alt);border:1px solid var(--line);color:var(--ink-dim);border-radius:6px;
+  font-size:11px;padding:4px 6px;max-width:88px;font-family:'Inter';
+}
+.icon-btn{
+  background:transparent;border:1px solid var(--line);color:var(--ink-dim);border-radius:6px;
+  padding:4px 7px;font-size:12px;cursor:pointer;line-height:1;
+}
+.icon-btn:hover{border-color:var(--ink);color:var(--ink);}
+.icon-btn.remove:hover{border-color:var(--red-card);color:var(--red-card);}
+
+.add-player-row{display:flex;gap:6px;margin-top:8px;}
+.txt-input{
+  flex:1;background:var(--bg-alt);border:1px solid var(--line);color:var(--ink);border-radius:8px;
+  padding:8px 10px;font-size:13px;font-family:'Inter';outline:none;min-width:0;
+}
+.txt-input:focus{border-color:var(--gold);}
+
+.swatch-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.swatch-opt{
+  width:26px;height:26px;border-radius:7px;cursor:pointer;border:2px solid transparent;
+}
+.swatch-opt.selected{border-color:var(--ink);transform:scale(1.08);}
+
+.event-log{max-height:220px;overflow-y:auto;}
+.event-row{display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:12.5px;border-bottom:1px solid var(--line);}
+.event-row:last-child{border-bottom:none;}
+.event-min{font-family:'JetBrains Mono';color:var(--ink-dimmer);min-width:34px;}
+.event-tag{font-size:14px;}
+.event-txt{flex:1;color:var(--ink-dim);}
+.event-txt b{color:var(--ink);}
+
+.empty-state{
+  text-align:center;padding:36px 16px;color:var(--ink-dimmer);font-size:13px;
+}
+.empty-state .big{font-family:'Bebas Neue';font-size:22px;color:var(--ink-dim);display:block;margin-bottom:6px;}
+
+/* ---------- Stats table ---------- */
+.stats-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.stats-table th{
+  text-align:left;font-family:'JetBrains Mono';font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--ink-dimmer);padding:8px 6px;border-bottom:1px solid var(--line-strong);position:sticky;top:0;background:var(--bg-panel);
+}
+.stats-table td{padding:9px 6px;border-bottom:1px solid var(--line);white-space:nowrap;}
+.stats-table tr:first-child td{color:var(--gold);font-weight:800;}
+.rank-num{font-family:'JetBrains Mono';color:var(--ink-dimmer);width:22px;display:inline-block;}
+
+/* ---------- History ---------- */
+.hist-item{
+  background:var(--bg-alt);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;
+}
+.hist-top{display:flex;justify-content:space-between;align-items:center;font-family:'Bebas Neue';font-size:16px;flex-wrap:wrap;gap:4px;}
+.hist-winner{font-size:11px;font-family:'Inter';font-weight:700;color:var(--gold);background:rgba(242,183,5,0.12);padding:3px 9px;border-radius:100px;}
+.hist-meta{font-size:11px;color:var(--ink-dimmer);margin-top:4px;font-family:'JetBrains Mono';}
+.hist-detail{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);display:none;}
+.hist-item.open .hist-detail{display:block;}
+.hist-partido-row{font-size:12px;color:var(--ink-dim);padding:4px 0;border-bottom:1px solid var(--line);}
+.hist-partido-row:last-child{border-bottom:none;}
+
+/* ---------- Forms ---------- */
+.form-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--ink-dimmer);margin-bottom:5px;display:block;margin-top:12px;}
+.form-label:first-child{margin-top:0;}
+.team-setup{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;}
+.format-choice{display:flex;gap:8px;}
+.format-opt{
+  flex:1;text-align:center;padding:12px;border:1px solid var(--line);border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;
+}
+.format-opt.selected{border-color:var(--gold);background:rgba(242,183,5,0.08);color:var(--gold);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:520px){.two-col{grid-template-columns:1fr;}}
+
+.chip-player{
+  padding:7px 13px;border-radius:100px;border:1px solid var(--line-strong);color:var(--ink-dim);
+  font-size:12.5px;font-weight:600;cursor:pointer;background:var(--bg-alt);transition:.15s;
+}
+.chip-player:hover{border-color:var(--gold);}
+.chip-player.chip-selected{background:var(--gold);border-color:var(--gold);color:#1a1400;}
+.chip-player.chip-disabled{opacity:0.4;cursor:not-allowed;}
+.chip-player.chip-disabled:hover{border-color:var(--line-strong);}
+
+/* ---------- Modal ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(4,10,7,0.72);backdrop-filter:blur(2px);
+  display:flex;align-items:center;justify-content:center;z-index:50;padding:16px;
+}
+.modal-box{
+  background:var(--bg-panel);border:1px solid var(--line-strong);border-radius:16px;padding:22px;
+  max-width:400px;width:100%;max-height:88vh;overflow-y:auto;
+}
+.modal-title{font-family:'Bebas Neue';font-size:20px;margin-bottom:12px;}
+.modal-txt{font-size:13px;color:var(--ink-dim);margin-bottom:14px;line-height:1.5;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap;}
+.modal-error{color:var(--red-card);font-size:12px;margin-top:8px;min-height:14px;}
+.modal-choice-btn{
+  display:block;width:100%;text-align:left;background:var(--bg-alt);border:1px solid var(--line);color:var(--ink);
+  padding:12px 14px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;
+}
+.modal-choice-btn:hover{border-color:var(--gold);}
+
+.section-gap{margin-top:22px;}
+.hint{font-size:11.5px;color:var(--ink-dimmer);line-height:1.5;margin-top:8px;}
+.toast{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--gold);color:#1a1400;
+  padding:9px 18px;border-radius:100px;font-size:12.5px;font-weight:700;z-index:60;box-shadow:0 6px 20px rgba(0,0,0,0.4);
+  animation: toastIn 0.25s ease-out;max-width:90vw;text-align:center;
+}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+</style>
+</head>
+<body>
+<div id="app">Cargando…</div>
+
+<script>
+/* =========================================================
+   PARTIDOS LETRADO APP
+   Formato: cada jornada tiene 2 o 3 equipos. Se juegan
+   "partidos" (mini-juegos a X goles o tiempo límite). En
+   jornadas de 3 equipos, el que pierde sale y entra el que
+   esperaba. Gana la jornada quien más partidos acumule
+   (empate compartido si hay igualdad).
+   Almacenamiento compartido vía window.storage (clave única)
+   ========================================================= */
+
+const STORAGE_KEY = 'partidos-letrado-data-v2';
+const ADMIN_PASSWORD = 'Letrado2026'; // clave simple del admin (solo control de cliente)
+
+const SWATCHES = [
+  {n:'Azul', c:'#3a86ff'}, {n:'Rojo', c:'#e63946'}, {n:'Amarillo', c:'#f2b705'},
+  {n:'Verde', c:'#52b788'}, {n:'Naranja', c:'#f77f00'}, {n:'Morado', c:'#9d4edd'},
+  {n:'Blanco', c:'#f1faee'}, {n:'Negro', c:'#20221f'}
+];
+
+let state = { currentJornadaId: null, jornadas: [], jugadoresFrecuentes: [] };
+let isAdmin = false;
+let activeTab = 'marcador';
+let loaded = false;
+let lastLocalWrite = 0;
+let goalFlashUntil = 0;
+let openHistoryIds = new Set();
+let assistSelect = {}; // "equipoId|jugador" -> assist name
+let modal = null;
+
+// Borrador de creación de jornada
+let draft = {
+  numEquipos: 2,
+  limiteGoles: 2,
+  limiteTiempoMin: '',
+  equipos: [
+    { nombre:'Equipo 1', color:'#3a86ff', jugadores:[] },
+    { nombre:'Equipo 2', color:'#e63946', jugadores:[] },
+    { nombre:'Equipo 3', color:'#f2b705', jugadores:[] }
+  ],
+  addPlayerInput: ['','','']
+};
+
+/* ---------- Utilidades ---------- */
+function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function fmtClock(totalSeconds){
+  totalSeconds = Math.max(0, Math.floor(totalSeconds));
+  const m = Math.floor(totalSeconds/60).toString().padStart(2,'0');
+  const s = (totalSeconds%60).toString().padStart(2,'0');
+  return m+':'+s;
+}
+function elapsedSeconds(timer){
+  if(!timer) return 0;
+  let secs = timer.accumulatedSeconds || 0;
+  if(timer.running && timer.startedAt){ secs += (Date.now() - timer.startedAt)/1000; }
+  return secs;
+}
+function getCurrentJornada(){
+  return state.jornadas.find(j => j.id === state.currentJornadaId) || null;
+}
+function getEquipo(j, equipoId){
+  return j.equipos.find(e => e.id === equipoId);
+}
+function getPartidoActual(j){
+  if(!j) return null;
+  return j.partidos.find(p => p.estado === 'en_vivo') || null;
+}
+function nextJornadaNumber(){
+  if(state.jornadas.length === 0) return 1;
+  return Math.max(...state.jornadas.map(j => j.numero||0)) + 1;
+}
+
+/* ---------- Persistencia ---------- */
+async function loadState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, true);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      if(parsed && Array.isArray(parsed.jornadas)) state = parsed;
+    }
+  }catch(e){
+    console.log('No hay datos previos o error al cargar:', e);
+  }
+  if(!Array.isArray(state.jugadoresFrecuentes)) state.jugadoresFrecuentes = [];
+  loaded = true;
+  render();
+}
+
+/* ---------- Jugadores habituales (plantilla) ---------- */
+let nuevoJugadorHabitualInput = '';
+function addJugadorFrecuente(name){
+  const n = (name||'').trim();
+  if(!n) return;
+  if(state.jugadoresFrecuentes.some(x => x.toLowerCase() === n.toLowerCase())) return;
+  state.jugadoresFrecuentes.push(n);
+  saveState();
+}
+function removeJugadorFrecuente(name){
+  modal = { type:'confirm', title:'¿Quitar de jugadores habituales?', text:'"'+name+'" ya no aparecerá como sugerencia rápida al armar equipos (el historial de partidos ya jugados no se ve afectado).',
+    onConfirm: () => {
+      state.jugadoresFrecuentes = state.jugadoresFrecuentes.filter(x => x !== name);
+      modal = null; saveState(); render();
+    } };
+  render();
+}
+async function saveState(){
+  lastLocalWrite = Date.now();
+  try{
+    const res = await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
+    if(!res) console.error('No se pudo guardar (sin resultado).');
+  }catch(e){
+    console.error('Error guardando estado:', e);
+    showToast('⚠️ No se pudo guardar el cambio. Revisa tu conexión.');
+  }
+}
+async function pollRemote(){
+  if(Date.now() - lastLocalWrite < 2500) return;
+  try{
+    const res = await window.storage.get(STORAGE_KEY, true);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      if(parsed && JSON.stringify(parsed) !== JSON.stringify(state)){
+        state = parsed;
+        render();
+      }
+    }
+  }catch(e){ /* silencioso: puede que aún no exista la clave */ }
+}
+
+let toastTimer = null;
+function showToast(msg){
+  let el = document.getElementById('toast');
+  if(el) el.remove();
+  el = document.createElement('div');
+  el.id = 'toast'; el.className='toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.remove(); }, 2800);
+}
+
+/* ---------- Admin ---------- */
+function openAdminModal(){ modal = {type:'admin-login', error:''}; render(); }
+function tryAdminLogin(pw){
+  if(pw === ADMIN_PASSWORD){
+    isAdmin = true; modal = null; render(); showToast('Modo admin activado');
+  } else {
+    modal = {type:'admin-login', error:'Clave incorrecta. Intenta de nuevo.'};
+    render();
+  }
+}
+function logoutAdmin(){ isAdmin = false; render(); showToast('Saliste del modo admin'); }
+
+/* ---------- Creación de jornada ---------- */
+function setDraftNumEquipos(n){ draft.numEquipos = n; render(); }
+function setDraftField(idx, field, value){ draft.equipos[idx][field] = value; render(); }
+function setDraftColor(idx, color){ draft.equipos[idx].color = color; render(); }
+function addDraftPlayer(idx){
+  const name = (draft.addPlayerInput[idx]||'').trim();
+  if(!name) return;
+  const yaAsignado = draft.equipos.some(eq => eq.jugadores.includes(name));
+  if(yaAsignado){ showToast(name+' ya está en un equipo de esta jornada'); return; }
+  draft.equipos[idx].jugadores.push(name);
+  draft.addPlayerInput[idx] = '';
+  addJugadorFrecuente(name); // se guarda como habitual para la próxima vez
+  render();
+}
+function removeDraftPlayer(idx, pIdx){
+  draft.equipos[idx].jugadores.splice(pIdx,1);
+  render();
+}
+function draftEquipoDeJugador(name){
+  return draft.equipos.findIndex(eq => eq.jugadores.includes(name));
+}
+function toggleDraftChip(idx, name){
+  const enIdx = draftEquipoDeJugador(name);
+  if(enIdx === idx){
+    draft.equipos[idx].jugadores = draft.equipos[idx].jugadores.filter(x => x !== name);
+  } else if(enIdx !== -1){
+    showToast(name+' ya está asignado a '+(draft.equipos[enIdx].nombre||('Equipo '+(enIdx+1)))+'. Quítalo de ahí primero.');
+    return;
+  } else {
+    draft.equipos[idx].jugadores.push(name);
+  }
+  render();
+}
+
+function crearYIniciarJornada(){
+  const equiposActivos = draft.equipos.slice(0, draft.numEquipos);
+  for(const eq of equiposActivos){
+    if(eq.jugadores.length === 0){
+      showToast('Cada equipo necesita al menos 1 jugador'); return;
+    }
+  }
+  const equipos = equiposActivos.map((eq, i) => ({
+    id: 'T'+(i+1), nombre: eq.nombre || ('Equipo '+(i+1)), color: eq.color, jugadores: [...eq.jugadores]
+  }));
+
+  const j = {
+    id: uid(),
+    numero: nextJornadaNumber(),
+    fecha: new Date().toISOString().slice(0,10),
+    estado: 'en_vivo',
+    limiteGoles: parseInt(draft.limiteGoles,10) || 2,
+    limiteTiempoMin: draft.limiteTiempoMin ? parseInt(draft.limiteTiempoMin,10) : null,
+    equipos,
+    partidos: []
+  };
+  // Primer partido: equipo1 vs equipo2, equipo3 (si existe) espera
+  crearPartido(j, equipos[0].id, equipos[1].id, equipos[2] ? equipos[2].id : null);
+
+  state.jornadas.push(j);
+  state.currentJornadaId = j.id;
+  // reset draft
+  draft = {
+    numEquipos: 2, limiteGoles: 2, limiteTiempoMin: '',
+    equipos: [
+      { nombre:'Equipo 1', color:'#3a86ff', jugadores:[] },
+      { nombre:'Equipo 2', color:'#e63946', jugadores:[] },
+      { nombre:'Equipo 3', color:'#f2b705', jugadores:[] }
+    ],
+    addPlayerInput: ['','','']
+  };
+  saveState(); render();
+}
+function crearPartido(j, izqId, derId, esperaId){
+  j.partidos.push({
+    id: uid(), numero: j.partidos.length+1,
+    equipoIzqId: izqId, equipoDerId: derId, equipoEsperaId: esperaId || null,
+    goles: [], tarjetas: [],
+    timer: { running:true, startedAt: Date.now(), accumulatedSeconds:0 },
+    estado: 'en_vivo', resultado: null
+  });
+}
+
+/* ---------- Control del partido en vivo ---------- */
+function toggleTimer(){
+  const j = getCurrentJornada(); const p = getPartidoActual(j); if(!p) return;
+  if(p.timer.running){
+    p.timer.accumulatedSeconds = elapsedSeconds(p.timer);
+    p.timer.running = false; p.timer.startedAt = null;
+  } else {
+    p.timer.running = true; p.timer.startedAt = Date.now();
+  }
+  saveState(); render();
+}
+function resetTimer(){
+  modal = { type:'confirm', title:'¿Reiniciar el reloj del partido?', text:'El tiempo de este partido volverá a 00:00.',
+    onConfirm: () => {
+      const j = getCurrentJornada(); const p = getPartidoActual(j);
+      if(p){ p.timer.accumulatedSeconds = 0; p.timer.startedAt = p.timer.running ? Date.now() : null; }
+      modal = null; saveState(); render();
+    } };
+  render();
+}
+function addGoal(equipoId, playerName){
+  const j = getCurrentJornada(); const p = getPartidoActual(j); if(!p) return;
+  const key = equipoId+'|'+playerName;
+  const asistencia = assistSelect[key] || '';
+  p.goles.push({ id: uid(), equipoId, jugador: playerName, asistencia: asistencia || null, minuto: Math.floor(elapsedSeconds(p.timer)/60), ts: Date.now() });
+  goalFlashUntil = Date.now() + 900;
+  saveState(); render();
+  setTimeout(()=>{ if(Date.now() >= goalFlashUntil - 50) render(); }, 950);
+}
+function removeGoal(goalId){
+  const j = getCurrentJornada(); const p = getPartidoActual(j); if(!p) return;
+  p.goles = p.goles.filter(g => g.id !== goalId);
+  saveState(); render();
+}
+function addCard(equipoId, playerName, tipo){
+  const j = getCurrentJornada(); const p = getPartidoActual(j); if(!p) return;
+  p.tarjetas.push({ id: uid(), equipoId, jugador:playerName, tipo, minuto: Math.floor(elapsedSeconds(p.timer)/60) });
+  saveState(); render();
+}
+function removeCard(cardId){
+  const j = getCurrentJornada(); const p = getPartidoActual(j); if(!p) return;
+  p.tarjetas = p.tarjetas.filter(c => c.id !== cardId);
+  saveState(); render();
+}
+function setAssist(equipoId, playerName, value){
+  assistSelect[equipoId+'|'+playerName] = value;
+}
+
+/* ---------- Finalizar partido y rotación ---------- */
+function abrirModalFinalizarPartido(){
+  const j = getCurrentJornada(); const p = getPartidoActual(j); if(!p) return;
+  const eqIzq = getEquipo(j, p.equipoIzqId), eqDer = getEquipo(j, p.equipoDerId);
+  modal = { type:'resultado-partido', eqIzqNombre: eqIzq.nombre, eqDerNombre: eqDer.nombre };
+  render();
+}
+function resolverPartido(resultado){
+  const j = getCurrentJornada(); const p = getPartidoActual(j); if(!p) return;
+  p.timer.accumulatedSeconds = elapsedSeconds(p.timer);
+  p.timer.running = false; p.timer.startedAt = null;
+  p.estado = 'finalizado';
+  p.resultado = resultado; // 'IZQ' | 'DER' | 'EMPATE'
+
+  if(!p.equipoEsperaId){
+    // Jornada de 2 equipos: se repite el mismo enfrentamiento
+    modal = null;
+    crearPartido(j, p.equipoIzqId, p.equipoDerId, null);
+    saveState(); render();
+    return;
+  }
+
+  if(resultado === 'EMPATE'){
+    // Con 3 equipos y empate, el admin elige quién sale esta ronda
+    modal = {
+      type:'elegir-sale', equipos: j.equipos.map(e=>({id:e.id, nombre:e.nombre})),
+      partidoEquipos:[p.equipoIzqId, p.equipoDerId, p.equipoEsperaId]
+    };
+    render();
+    return;
+  }
+
+  const ganadorId = resultado === 'IZQ' ? p.equipoIzqId : p.equipoDerId;
+  const perdedorId = resultado === 'IZQ' ? p.equipoDerId : p.equipoIzqId;
+  modal = null;
+  crearPartido(j, ganadorId, p.equipoEsperaId, perdedorId);
+  saveState(); render();
+}
+function resolverQuienSale(saleId){
+  const j = getCurrentJornada();
+  const p = j.partidos[j.partidos.length-1]; // el que acaba de terminar en empate
+  const todos = [p.equipoIzqId, p.equipoDerId, p.equipoEsperaId];
+  const quedan = todos.filter(id => id !== saleId);
+  modal = null;
+  crearPartido(j, quedan[0], quedan[1], saleId);
+  saveState(); render();
+}
+
+/* ---------- Finalizar jornada ---------- */
+function finalizarJornada(){
+  const j = getCurrentJornada(); if(!j) return;
+  const pActual = getPartidoActual(j);
+  if(pActual){
+    showToast('Primero finaliza el partido en curso (botón "Finalizar partido")');
+    return;
+  }
+  modal = { type:'confirm', title:'¿Finalizar la jornada?', text:'La jornada pasará al historial con el equipo (o equipos) ganador según los partidos acumulados.',
+    onConfirm: () => {
+      j.estado = 'finalizado';
+      state.currentJornadaId = null; modal = null; saveState(); render();
+    } };
+  render();
+}
+function cancelarJornada(){
+  modal = { type:'confirm', title:'¿Cancelar esta jornada?', text:'Se eliminará por completo (no quedará en el historial).',
+    onConfirm: () => {
+      state.jornadas = state.jornadas.filter(j => j.id !== state.currentJornadaId);
+      state.currentJornadaId = null; modal = null; saveState(); render();
+    } };
+  render();
+}
+
+/* ---------- Cálculo de ganador(es) de jornada ---------- */
+function conteoPartidosGanados(j){
+  const conteo = {}; j.equipos.forEach(e => conteo[e.id] = 0);
+  j.partidos.filter(p=>p.estado==='finalizado').forEach(p => {
+    if(p.resultado === 'IZQ') conteo[p.equipoIzqId] = (conteo[p.equipoIzqId]||0) + 1;
+    else if(p.resultado === 'DER') conteo[p.equipoDerId] = (conteo[p.equipoDerId]||0) + 1;
+  });
+  return conteo;
+}
+function ganadoresJornada(j){
+  const conteo = conteoPartidosGanados(j);
+  const valores = Object.values(conteo);
+  const max = valores.length ? Math.max(...valores) : 0;
+  const ganadores = j.equipos.filter(e => conteo[e.id] === max);
+  const empateTotal = ganadores.length === j.equipos.length;
+  return { conteo, max, ganadores, empateTotal };
+}
+
+/* ---------- Estadísticas globales (por jugador) ---------- */
+function jugadorEnEquipo(j, equipo, nombre){ return equipo.jugadores.includes(nombre); }
+
+function playerResultSequence(name){
+  const finalizadas = state.jornadas.filter(j => j.estado === 'finalizado').sort((a,b)=>a.numero-b.numero);
+  const seq = [];
+  finalizadas.forEach(j => {
+    const equipoJugador = j.equipos.find(e => e.jugadores.includes(name));
+    if(!equipoJugador) return;
+    const { ganadores, empateTotal } = ganadoresJornada(j);
+    let resultado;
+    if(empateTotal) resultado = 'E';
+    else if(ganadores.some(g => g.id === equipoJugador.id)) resultado = 'V';
+    else resultado = 'D';
+    seq.push(resultado);
+  });
+  return seq;
+}
+function computeStreaks(seq){
+  if(seq.length === 0) return { rachaTipo:null, rachaCantidad:0, mejorRachaV:0 };
+  const ultimo = seq[seq.length-1];
+  let rachaCantidad = 0;
+  for(let i=seq.length-1;i>=0;i--){ if(seq[i]===ultimo) rachaCantidad++; else break; }
+  let mejorRachaV = 0, actual = 0;
+  seq.forEach(r => { if(r==='V'){ actual++; mejorRachaV = Math.max(mejorRachaV, actual); } else actual = 0; });
+  return { rachaTipo: ultimo, rachaCantidad, mejorRachaV };
+}
+function allTimeStats(){
+  const map = {};
+  function ensure(name){
+    if(!map[name]) map[name] = { nombre:name, goles:0, asistencias:0, amarillas:0, rojas:0, jornadasJugadas:new Set(), partidosJugados:0, partidosGanados:0 };
+    return map[name];
+  }
+  state.jornadas.forEach(j => {
+    j.equipos.forEach(eq => eq.jugadores.forEach(p => ensure(p).jornadasJugadas.add(j.id)));
+    j.partidos.forEach(p => {
+      const eqIzq = getEquipo(j, p.equipoIzqId), eqDer = getEquipo(j, p.equipoDerId);
+      if(eqIzq) eqIzq.jugadores.forEach(name => {
+        ensure(name).partidosJugados += 1;
+        if(p.resultado === 'IZQ') ensure(name).partidosGanados += 1;
+      });
+      if(eqDer) eqDer.jugadores.forEach(name => {
+        ensure(name).partidosJugados += 1;
+        if(p.resultado === 'DER') ensure(name).partidosGanados += 1;
+      });
+      p.goles.forEach(g => {
+        ensure(g.jugador).goles += 1;
+        if(g.asistencia) ensure(g.asistencia).asistencias += 1;
+      });
+      p.tarjetas.forEach(c => {
+        if(c.tipo === 'amarilla') ensure(c.jugador).amarillas += 1; else ensure(c.jugador).rojas += 1;
+      });
+    });
+  });
+  return Object.values(map).map(s => {
+    const seq = playerResultSequence(s.nombre);
+    const streaks = computeStreaks(seq);
+    return {
+      ...s, jornadasJugadas: s.jornadasJugadas.size,
+      promedio: s.jornadasJugadas.size ? (s.goles/s.jornadasJugadas.size) : 0,
+      ...streaks
+    };
+  }).sort((a,b)=> b.goles - a.goles || b.jornadasJugadas - a.jornadasJugadas);
+}
+function rachaLabel(s){
+  if(!s.rachaTipo) return '<span style="color:var(--ink-dimmer)">—</span>';
+  if(s.rachaTipo === 'V') return `<span style="color:var(--green-go);font-weight:700;">🔥 ${s.rachaCantidad}V</span>`;
+  if(s.rachaTipo === 'D') return `<span style="color:var(--red-card);font-weight:700;">${s.rachaCantidad}D</span>`;
+  return `<span style="color:var(--ink-dimmer);font-weight:700;">${s.rachaCantidad}E</span>`;
+}
+
+/* ---------- Render principal ---------- */
+function render(){
+  const app = document.getElementById('app');
+  if(!loaded){ app.innerHTML = '<div class="empty-state">Cargando datos…</div>'; return; }
+
+  const j = getCurrentJornada();
+  let html = '';
+  html += renderTopbar();
+  html += renderTabs();
+
+  if(activeTab === 'marcador') html += renderMarcador(j);
+  else if(activeTab === 'goleadores') html += renderGoleadores();
+  else if(activeTab === 'historial') html += renderHistorial();
+  else if(activeTab === 'jugadores') html += renderJugadoresTab();
+
+  if(isAdmin && activeTab === 'marcador') html += renderAdminZone();
+
+  app.innerHTML = html;
+  if(modal) renderModal();
+  attachHandlers();
+}
+
+function renderTopbar(){
+  return `
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-name">Partidos <span>Letrado</span> APP</div>
+      <div class="brand-sub">Fútbol familiar · cada 8 días</div>
+    </div>
+    <button class="admin-btn ${isAdmin?'active':''}" id="btn-admin-toggle">
+      <span class="dot ${isAdmin?'on':''}"></span> ${isAdmin ? 'Admin activo' : 'Entrar como admin'}
+    </button>
+  </div>`;
+}
+function renderTabs(){
+  const tabs = [ {id:'marcador', label:'⚽ Marcador'}, {id:'jugadores', label:'👥 Jugadores'}, {id:'goleadores', label:'🏆 Goleadores'}, {id:'historial', label:'📅 Historial'} ];
+  return `<div class="tabs">${tabs.map(t=>`<button class="tab-btn ${activeTab===t.id?'active':''}" data-tab="${t.id}">${t.label}</button>`).join('')}</div>`;
+}
+
+function renderMarcador(j){
+  if(!j){
+    if(isAdmin) return renderNuevaJornadaForm();
+    return `<div class="card"><div class="empty-state">
+      <span class="big">No hay ningún partido activo</span>
+      El admin aún no ha creado la jornada de hoy. Vuelve pronto ⚽
+    </div></div>`;
+  }
+
+  const p = getPartidoActual(j);
+
+  // Si no hay partido en vivo, la jornada ya terminó de facto (esperando "Finalizar jornada")
+  if(!p){
+    return renderCierreJornada(j);
+  }
+
+  const eqIzq = getEquipo(j, p.equipoIzqId), eqDer = getEquipo(j, p.equipoDerId);
+  const eqEspera = p.equipoEsperaId ? getEquipo(j, p.equipoEsperaId) : null;
+  const glosIzq = p.goles.filter(g=>g.equipoId===p.equipoIzqId).length;
+  const glosDer = p.goles.filter(g=>g.equipoId===p.equipoDerId).length;
+  const secs = elapsedSeconds(p.timer);
+  const isFlash = Date.now() < goalFlashUntil;
+  const capIzq = glosIzq >= j.limiteGoles, capDer = glosDer >= j.limiteGoles;
+  const tiempoAgotado = j.limiteTiempoMin && secs >= j.limiteTiempoMin*60;
+
+  let html = `<div class="jumbotron ${isFlash?'goal-flash':''}">
+    <div class="jm-status">Jornada ${j.numero} · ${j.fecha} &nbsp;·&nbsp; Partido ${p.numero} &nbsp;·&nbsp; <span class="live-chip">EN VIVO</span></div>
+    <div class="jm-row">
+      <div class="jm-team"><div class="jm-team-name"><span class="jm-team-swatch" style="background:${eqIzq.color}"></span>${escapeHtml(eqIzq.nombre)}</div></div>
+      <div class="jm-score ${capIzq?'cap-reached':''}">${glosIzq}</div>
+      <div class="jm-sep">:</div>
+      <div class="jm-score ${capDer?'cap-reached':''}">${glosDer}</div>
+      <div class="jm-team"><div class="jm-team-name">${escapeHtml(eqDer.nombre)}<span class="jm-team-swatch" style="background:${eqDer.color};margin-left:7px;margin-right:0"></span></div></div>
+    </div>
+    <div class="jm-clock"><span class="lbl">Tiempo del partido · a ${j.limiteGoles} goles${j.limiteTiempoMin?' o '+j.limiteTiempoMin+' min':''}</span>${fmtClock(secs)}</div>`;
+
+  if(eqEspera){
+    html += `<div class="jm-waiting">⏳ Espera para jugar: ${escapeHtml(eqEspera.nombre)}</div>`;
+  }
+  if(capIzq || capDer || tiempoAgotado){
+    const cual = capIzq ? eqIzq.nombre : (capDer ? eqDer.nombre : null);
+    html += `<div class="jm-cap-banner">${cual ? '🏆 '+escapeHtml(cual)+' llegó a '+j.limiteGoles+' goles' : '⏰ Se agotó el tiempo del partido'} — ${isAdmin?'puedes finalizar este partido':'esperando que el admin cierre el partido'}</div>`;
+  }
+
+  if(isAdmin){
+    html += `<div class="jm-controls">
+      <button class="btn ${p.timer.running?'btn-outline':'btn-gold'}" id="btn-toggle-timer">${p.timer.running?'⏸ Pausar':'▶ Reanudar'}</button>
+      <button class="btn btn-outline" id="btn-reset-timer">↺ Reiniciar reloj</button>
+      <button class="btn btn-danger" id="btn-finalizar-partido">🏁 Finalizar partido</button>
+    </div>`;
+  }
+  html += `</div>`;
+
+  // Mini tabla de la jornada (partidos ganados por equipo hasta ahora)
+  const { conteo } = ganadoresJornada(j);
+  html += `<div class="card"><div class="card-title">📊 Tabla de la jornada</div>
+    <div class="mini-tabla">${j.equipos.map(e=>`
+      <div class="mini-tabla-item">
+        <div class="mini-tabla-name"><span class="jm-team-swatch" style="background:${e.color}"></span>${escapeHtml(e.nombre)}</div>
+        <div class="mini-tabla-wins">${conteo[e.id]||0}</div>
+        <div class="mini-tabla-wins-lbl">partidos ganados</div>
+      </div>`).join('')}</div>
+  </div>`;
+
+  // Rosters de los 2 equipos activos
+  html += `<div class="roster-grid">`;
+  html += renderTeamCard(j, p, eqIzq);
+  html += renderTeamCard(j, p, eqDer);
+  html += `</div>`;
+
+  // Log de goles del partido actual
+  html += `<div class="card"><div class="card-title">📋 Goles de este partido</div>`;
+  if(p.goles.length === 0){
+    html += `<div class="empty-state" style="padding:16px;">Todavía no hay goles en este partido.</div>`;
+  } else {
+    html += `<div class="event-log">` + p.goles.slice().sort((a,b)=>b.ts-a.ts).map(g => {
+      const eq = getEquipo(j, g.equipoId);
+      return `<div class="event-row">
+        <span class="event-min">${g.minuto}'</span><span class="event-tag">⚽</span>
+        <span class="event-txt"><b>${escapeHtml(g.jugador)}</b> (${escapeHtml(eq.nombre)})${g.asistencia? ' · asist. '+escapeHtml(g.asistencia):''}</span>
+        ${isAdmin? `<button class="icon-btn remove" data-remove-goal="${g.id}">✕</button>`:''}
+      </div>`;
+    }).join('') + `</div>`;
+  }
+  html += `</div>`;
+
+  if(p.tarjetas.length > 0 || isAdmin){
+    html += `<div class="card"><div class="card-title">🟨 Tarjetas de este partido</div>`;
+    if(p.tarjetas.length === 0){
+      html += `<div class="empty-state" style="padding:16px;">Sin tarjetas en este partido.</div>`;
+    } else {
+      html += `<div class="event-log">` + p.tarjetas.map(c => {
+        const eq = getEquipo(j, c.equipoId);
+        return `<div class="event-row">
+          <span class="event-min">${c.minuto}'</span><span class="event-tag">${c.tipo==='amarilla'?'🟨':'🟥'}</span>
+          <span class="event-txt"><b>${escapeHtml(c.jugador)}</b> (${escapeHtml(eq.nombre)})</span>
+          ${isAdmin? `<button class="icon-btn remove" data-remove-card="${c.id}">✕</button>`:''}
+        </div>`;
+      }).join('') + `</div>`;
+    }
+    html += `</div>`;
+  }
+
+  return html;
+}
+
+function renderTeamCard(j, p, eq){
+  const canScore = isAdmin;
+  let html = `<div class="card">
+    <div class="card-title"><span class="swatch" style="background:${eq.color}"></span>${escapeHtml(eq.nombre)}</div>`;
+  if(eq.jugadores.length === 0){
+    html += `<div class="empty-state" style="padding:14px 0;">Sin jugadores.</div>`;
+  } else {
+    html += eq.jugadores.map(name => {
+      const goles = p.goles.filter(g=>g.equipoId===eq.id && g.jugador===name).length;
+      let row = `<div class="player-row"><span class="player-name">${escapeHtml(name)}</span><span class="goal-count">${goles}</span>`;
+      if(canScore){
+        const teammates = eq.jugadores.filter(x=>x!==name);
+        row += `<select class="mini-select" data-assist-for="${eq.id}|${name}">
+            <option value="">Sin asist.</option>
+            ${teammates.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('')}
+          </select>
+          <button class="icon-btn" data-goal-team="${eq.id}" data-goal-player="${escapeHtml(name)}">⚽ +Gol</button>
+          <button class="icon-btn" data-card-team="${eq.id}" data-card-player="${escapeHtml(name)}" data-card-tipo="amarilla">🟨</button>
+          <button class="icon-btn" data-card-team="${eq.id}" data-card-player="${escapeHtml(name)}" data-card-tipo="roja">🟥</button>`;
+      }
+      row += `</div>`;
+      return row;
+    }).join('');
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderCierreJornada(j){
+  const { conteo, ganadores, empateTotal } = ganadoresJornada(j);
+  let html = `<div class="card">
+    <div class="card-title">Jornada ${j.numero} · ${j.fecha}</div>
+    <div class="mini-tabla">${j.equipos.map(e=>`
+      <div class="mini-tabla-item">
+        <div class="mini-tabla-name"><span class="jm-team-swatch" style="background:${e.color}"></span>${escapeHtml(e.nombre)}</div>
+        <div class="mini-tabla-wins">${conteo[e.id]||0}</div>
+        <div class="mini-tabla-wins-lbl">partidos ganados</div>
+      </div>`).join('')}</div>
+    <div class="hint" style="margin-top:14px;font-size:13px;">
+      ${empateTotal ? '🤝 Va empatada entre todos los equipos.' : '🏆 Va ganando: ' + ganadores.map(g=>escapeHtml(g.nombre)).join(' y ')}
+    </div>`;
+  if(isAdmin){
+    html += `<div class="jm-controls" style="margin-top:14px;">
+      <button class="btn btn-gold" id="btn-finalizar-jornada">🏁 Finalizar jornada</button>
+      <button class="btn btn-danger" id="btn-cancelar-jornada">Cancelar jornada</button>
+    </div>`;
+  } else {
+    html += `<div class="hint">Esperando que el admin cierre la jornada.</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderNuevaJornadaForm(){
+  return `<div class="card">
+    <div class="card-title">🆕 Nueva jornada #${nextJornadaNumber()}</div>
+
+    <label class="form-label">¿Cuántos equipos hoy?</label>
+    <div class="format-choice">
+      <div class="format-opt ${draft.numEquipos===2?'selected':''}" data-num-equipos="2">2 equipos</div>
+      <div class="format-opt ${draft.numEquipos===3?'selected':''}" data-num-equipos="3">3 equipos (rotación)</div>
+    </div>
+    <div class="hint">${draft.numEquipos===3 ? 'El que pierde un partido sale, y entra el equipo que estaba esperando.' : 'Los dos equipos juegan varios partidos seguidos; gana la jornada quien acumule más partidos ganados.'}</div>
+
+    <div class="two-col section-gap">
+      <div>
+        <label class="form-label">Goles para ganar un partido</label>
+        <input class="txt-input" type="number" min="1" id="input-limite-goles" value="${escapeHtml(draft.limiteGoles)}">
+      </div>
+      <div>
+        <label class="form-label">Límite de tiempo por partido (min, opcional)</label>
+        <input class="txt-input" type="number" min="1" placeholder="Sin límite" id="input-limite-tiempo" value="${escapeHtml(draft.limiteTiempoMin)}">
+      </div>
+    </div>
+
+    ${draft.equipos.slice(0,draft.numEquipos).map((eq,idx)=>`
+      <div class="team-setup">
+        <label class="form-label">Nombre equipo ${idx+1}</label>
+        <input class="txt-input" value="${escapeHtml(eq.nombre)}" data-draft-name="${idx}">
+        <div class="swatch-row">${SWATCHES.map(sw=>`
+          <div class="swatch-opt ${eq.color===sw.c?'selected':''}" style="background:${sw.c}" data-draft-color="${idx}" data-color="${sw.c}"></div>
+        `).join('')}</div>
+
+        ${state.jugadoresFrecuentes.length>0 ? `
+        <label class="form-label">Jugadores habituales (toca para asignar)</label>
+        <div class="swatch-row">${state.jugadoresFrecuentes.map(name=>{
+          const enIdx = draftEquipoDeJugador(name);
+          const aqui = enIdx === idx;
+          const otro = enIdx !== -1 && !aqui;
+          return `<div class="chip-player ${aqui?'chip-selected':''} ${otro?'chip-disabled':''}" data-chip-team="${idx}" data-chip-name="${escapeHtml(name)}">${escapeHtml(name)}${otro?' ✓':''}</div>`;
+        }).join('')}</div>` : ''}
+
+        <div style="margin-top:10px;">
+          <label class="form-label">Jugadores asignados a este equipo</label>
+          ${eq.jugadores.length===0 ? '<div class="hint">Sin jugadores todavía.</div>' : eq.jugadores.map((p,pi)=>`
+            <div class="player-row"><span class="player-name">${escapeHtml(p)}</span>
+              <button class="icon-btn remove" data-draft-remove-player="${idx}|${pi}">✕</button>
+            </div>`).join('')}
+        </div>
+        <div class="add-player-row">
+          <input class="txt-input" placeholder="Nombre de jugador nuevo/invitado" value="${escapeHtml(draft.addPlayerInput[idx])}" data-draft-player-input="${idx}">
+          <button class="btn btn-outline btn-sm" data-draft-add-player="${idx}">Agregar</button>
+        </div>
+      </div>
+    `).join('')}
+
+    <button class="btn btn-gold btn-block" id="btn-crear-jornada">Iniciar jornada →</button>
+  </div>`;
+}
+
+function renderJugadoresTab(){
+  let html = `<div class="card">
+    <div class="card-title">👥 Jugadores habituales</div>
+    <div class="hint">Esta es la lista de la familia que suele jugar. Al armar una jornada nueva, podrás asignarlos a un equipo con un solo toque en vez de escribir el nombre cada vez.</div>`;
+
+  if(isAdmin){
+    html += `<div class="add-player-row" style="margin-top:12px;">
+      <input class="txt-input" placeholder="Nombre del jugador" id="input-nuevo-habitual" value="${escapeHtml(nuevoJugadorHabitualInput)}">
+      <button class="btn btn-gold btn-sm" id="btn-add-habitual">Agregar</button>
+    </div>`;
+  }
+
+  html += `<div style="margin-top:14px;">`;
+  if(state.jugadoresFrecuentes.length === 0){
+    html += `<div class="empty-state" style="padding:20px 0;">Todavía no hay jugadores habituales guardados.</div>`;
+  } else {
+    html += state.jugadoresFrecuentes.map(name => `
+      <div class="player-row">
+        <span class="player-name">${escapeHtml(name)}</span>
+        ${isAdmin ? `<button class="icon-btn remove" data-remove-habitual="${escapeHtml(name)}">✕</button>` : ''}
+      </div>`).join('');
+  }
+  html += `</div></div>`;
+  return html;
+}
+
+function renderGoleadores(){
+  const stats = allTimeStats();
+  if(stats.length === 0){
+    return `<div class="card"><div class="empty-state"><span class="big">Sin datos todavía</span>Cuando se jueguen jornadas, aquí verás la tabla histórica de goleadores.</div></div>`;
+  }
+  return `<div class="card">
+    <div class="card-title">🏆 Tabla histórica</div>
+    <div class="hint">La racha se calcula por jugador (no por equipo), ya que los equipos cambian cada jornada.</div>
+    <div style="overflow-x:auto;margin-top:10px;">
+    <table class="stats-table">
+      <thead><tr><th>#</th><th>Jugador</th><th>Goles</th><th>Jornadas</th><th>Prom.</th><th>Partidos ganados</th><th>Asist.</th><th>🟨</th><th>🟥</th><th>Racha</th><th>Mejor racha V</th></tr></thead>
+      <tbody>
+      ${stats.map((s,i)=>`<tr>
+        <td><span class="rank-num">${i+1}</span></td>
+        <td>${escapeHtml(s.nombre)}</td>
+        <td>${s.goles}</td>
+        <td>${s.jornadasJugadas}</td>
+        <td>${s.promedio.toFixed(2)}</td>
+        <td>${s.partidosGanados}/${s.partidosJugados}</td>
+        <td>${s.asistencias}</td>
+        <td>${s.amarillas}</td>
+        <td>${s.rojas}</td>
+        <td>${rachaLabel(s)}</td>
+        <td>${s.mejorRachaV > 0 ? '🏅 '+s.mejorRachaV : '<span style="color:var(--ink-dimmer)">—</span>'}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>
+  </div>`;
+}
+
+function renderHistorial(){
+  const finalizadas = state.jornadas.filter(j=>j.estado==='finalizado').sort((a,b)=>b.numero-a.numero);
+  if(finalizadas.length === 0){
+    return `<div class="card"><div class="empty-state"><span class="big">Aún no hay jornadas finalizadas</span>Cuando termine una jornada, quedará guardada aquí para siempre.</div></div>`;
+  }
+  return `<div class="card"><div class="card-title">📅 Jornadas jugadas</div>
+    ${finalizadas.map(j => {
+      const { conteo, ganadores, empateTotal } = ganadoresJornada(j);
+      const isOpen = openHistoryIds.has(j.id);
+      const resumenEquipos = j.equipos.map(e => escapeHtml(e.nombre)+' '+(conteo[e.id]||0)).join(' · ');
+      const ganadorTxt = empateTotal ? '🤝 Empate' : '🏆 '+ganadores.map(g=>escapeHtml(g.nombre)).join(' y ');
+      return `<div class="hist-item ${isOpen?'open':''}" data-toggle-hist="${j.id}">
+        <div class="hist-top"><span>${resumenEquipos}</span><span class="hist-winner">${ganadorTxt}</span></div>
+        <div class="hist-meta">Jornada ${j.numero} · ${j.fecha} · ${j.partidos.length} partido(s) jugados</div>
+        <div class="hist-detail">
+          ${j.partidos.map(p=>{
+            const eqIzq=getEquipo(j,p.equipoIzqId), eqDer=getEquipo(j,p.equipoDerId);
+            const gI=p.goles.filter(g=>g.equipoId===p.equipoIzqId).length, gD=p.goles.filter(g=>g.equipoId===p.equipoDerId).length;
+            return `<div class="hist-partido-row">Partido ${p.numero}: ${escapeHtml(eqIzq.nombre)} ${gI} - ${gD} ${escapeHtml(eqDer.nombre)} ${p.resultado==='EMPATE'?'(empate)':''}</div>`;
+          }).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function renderAdminZone(){
+  return `<div class="section-gap card">
+    <div class="card-title">⚙️ Panel admin</div>
+    <div class="hint">Solo tú puedes editar el marcador. Los demás familiares ven todo automáticamente en modo lectura.</div>
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-outline btn-sm" id="btn-logout-admin">Salir del modo admin</button>
+      <button class="btn btn-danger btn-sm" id="btn-reset-all">Borrar todos los datos</button>
+    </div>
+  </div>`;
+}
+
+function renderModal(){
+  const wrap = document.createElement('div');
+  wrap.className = 'modal-overlay'; wrap.id = 'modal-overlay';
+
+  if(modal.type === 'admin-login'){
+    wrap.innerHTML = `<div class="modal-box">
+      <div class="modal-title">Ingreso admin</div>
+      <div class="modal-txt">Escribe la clave de administrador para poder editar el marcador en vivo.</div>
+      <input type="password" class="txt-input" id="input-admin-pw" placeholder="Clave de admin" autofocus>
+      <div class="modal-error">${modal.error||''}</div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="btn-modal-cancel">Cancelar</button>
+        <button class="btn btn-gold" id="btn-modal-login">Entrar</button>
+      </div>
+    </div>`;
+  } else if(modal.type === 'confirm'){
+    wrap.innerHTML = `<div class="modal-box">
+      <div class="modal-title">${escapeHtml(modal.title)}</div>
+      <div class="modal-txt">${escapeHtml(modal.text)}</div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="btn-modal-cancel">Cancelar</button>
+        <button class="btn btn-danger" id="btn-modal-confirm">Confirmar</button>
+      </div>
+    </div>`;
+  } else if(modal.type === 'resultado-partido'){
+    wrap.innerHTML = `<div class="modal-box">
+      <div class="modal-title">¿Quién ganó este partido?</div>
+      <div class="modal-txt">Se guardará el resultado y se preparará el siguiente partido automáticamente.</div>
+      <button class="modal-choice-btn" data-resultado="IZQ">🏆 Ganó ${escapeHtml(modal.eqIzqNombre)}</button>
+      <button class="modal-choice-btn" data-resultado="DER">🏆 Ganó ${escapeHtml(modal.eqDerNombre)}</button>
+      <button class="modal-choice-btn" data-resultado="EMPATE">🤝 Empate</button>
+      <div class="modal-actions"><button class="btn btn-outline" id="btn-modal-cancel">Cancelar</button></div>
+    </div>`;
+  } else if(modal.type === 'elegir-sale'){
+    wrap.innerHTML = `<div class="modal-box">
+      <div class="modal-title">Empate — ¿quién sale esta ronda?</div>
+      <div class="modal-txt">Como fue empate, elige qué equipo se queda esperando el próximo turno. Los otros dos jugarán el siguiente partido.</div>
+      ${modal.partidoEquipos.map(id=>{
+        const nombre = modal.equipos.find(e=>e.id===id).nombre;
+        return `<button class="modal-choice-btn" data-sale="${id}">${escapeHtml(nombre)} espera</button>`;
+      }).join('')}
+    </div>`;
+  }
+
+  document.body.appendChild(wrap);
+  const pwInput = document.getElementById('input-admin-pw');
+  if(pwInput) pwInput.addEventListener('keydown', e => { if(e.key === 'Enter') tryAdminLogin(pwInput.value); });
+  const cancelBtn = document.getElementById('btn-modal-cancel');
+  if(cancelBtn) cancelBtn.onclick = () => { modal = null; render(); };
+  const loginBtn = document.getElementById('btn-modal-login');
+  if(loginBtn) loginBtn.onclick = () => tryAdminLogin(document.getElementById('input-admin-pw').value);
+  const confirmBtn = document.getElementById('btn-modal-confirm');
+  if(confirmBtn) confirmBtn.onclick = () => { if(modal && modal.onConfirm) modal.onConfirm(); };
+  wrap.querySelectorAll('[data-resultado]').forEach(el=>{
+    el.onclick = () => resolverPartido(el.getAttribute('data-resultado'));
+  });
+  wrap.querySelectorAll('[data-sale]').forEach(el=>{
+    el.onclick = () => resolverQuienSale(el.getAttribute('data-sale'));
+  });
+}
+
+/* ---------- Event delegation ---------- */
+function attachHandlers(){
+  const app = document.getElementById('app');
+
+  const adminToggle = document.getElementById('btn-admin-toggle');
+  if(adminToggle) adminToggle.onclick = () => { isAdmin ? logoutAdmin() : openAdminModal(); };
+
+  app.querySelectorAll('[data-tab]').forEach(el=>{ el.onclick = () => { activeTab = el.getAttribute('data-tab'); render(); }; });
+
+  // Formulario nueva jornada
+  app.querySelectorAll('[data-num-equipos]').forEach(el=>{
+    el.onclick = () => setDraftNumEquipos(parseInt(el.getAttribute('data-num-equipos'),10));
+  });
+  const inputLG = document.getElementById('input-limite-goles');
+  if(inputLG) inputLG.oninput = e => draft.limiteGoles = e.target.value;
+  const inputLT = document.getElementById('input-limite-tiempo');
+  if(inputLT) inputLT.oninput = e => draft.limiteTiempoMin = e.target.value;
+  app.querySelectorAll('[data-draft-name]').forEach(el=>{
+    el.oninput = e => setDraftField(parseInt(el.getAttribute('data-draft-name'),10), 'nombre', e.target.value);
+  });
+  app.querySelectorAll('[data-draft-color]').forEach(el=>{
+    el.onclick = () => setDraftColor(parseInt(el.getAttribute('data-draft-color'),10), el.getAttribute('data-color'));
+  });
+  app.querySelectorAll('[data-draft-player-input]').forEach(el=>{
+    const idx = parseInt(el.getAttribute('data-draft-player-input'),10);
+    el.oninput = e => draft.addPlayerInput[idx] = e.target.value;
+    el.addEventListener('keydown', e => { if(e.key==='Enter') addDraftPlayer(idx); });
+  });
+  app.querySelectorAll('[data-draft-add-player]').forEach(el=>{
+    el.onclick = () => addDraftPlayer(parseInt(el.getAttribute('data-draft-add-player'),10));
+  });
+  app.querySelectorAll('[data-chip-team]').forEach(el=>{
+    if(el.classList.contains('chip-disabled')) return;
+    el.onclick = () => toggleDraftChip(parseInt(el.getAttribute('data-chip-team'),10), el.getAttribute('data-chip-name'));
+  });
+  app.querySelectorAll('[data-draft-remove-player]').forEach(el=>{
+    el.onclick = () => {
+      const [idx,pi] = el.getAttribute('data-draft-remove-player').split('|').map(Number);
+      removeDraftPlayer(idx,pi);
+    };
+  });
+  const btnCrear = document.getElementById('btn-crear-jornada');
+  if(btnCrear) btnCrear.onclick = crearYIniciarJornada;
+
+  // Control de partido en vivo
+  const btnToggleTimer = document.getElementById('btn-toggle-timer');
+  if(btnToggleTimer) btnToggleTimer.onclick = toggleTimer;
+  const btnResetTimer = document.getElementById('btn-reset-timer');
+  if(btnResetTimer) btnResetTimer.onclick = resetTimer;
+  const btnFinalizarPartido = document.getElementById('btn-finalizar-partido');
+  if(btnFinalizarPartido) btnFinalizarPartido.onclick = abrirModalFinalizarPartido;
+  const btnFinalizarJornada = document.getElementById('btn-finalizar-jornada');
+  if(btnFinalizarJornada) btnFinalizarJornada.onclick = finalizarJornada;
+  const btnCancelJ = document.getElementById('btn-cancelar-jornada');
+  if(btnCancelJ) btnCancelJ.onclick = cancelarJornada;
+
+  app.querySelectorAll('[data-assist-for]').forEach(el=>{
+    const [equipoId, player] = el.getAttribute('data-assist-for').split('|');
+    el.onchange = e => setAssist(equipoId, player, e.target.value);
+  });
+  app.querySelectorAll('[data-goal-team]').forEach(el=>{
+    el.onclick = () => addGoal(el.getAttribute('data-goal-team'), el.getAttribute('data-goal-player'));
+  });
+  app.querySelectorAll('[data-card-team]').forEach(el=>{
+    el.onclick = () => addCard(el.getAttribute('data-card-team'), el.getAttribute('data-card-player'), el.getAttribute('data-card-tipo'));
+  });
+  app.querySelectorAll('[data-remove-goal]').forEach(el=>{ el.onclick = () => removeGoal(el.getAttribute('data-remove-goal')); });
+  app.querySelectorAll('[data-remove-card]').forEach(el=>{ el.onclick = () => removeCard(el.getAttribute('data-remove-card')); });
+
+  app.querySelectorAll('[data-toggle-hist]').forEach(el=>{
+    el.onclick = () => {
+      const id = el.getAttribute('data-toggle-hist');
+      if(openHistoryIds.has(id)) openHistoryIds.delete(id); else openHistoryIds.add(id);
+      render();
+    };
+  });
+
+  const inputHabitual = document.getElementById('input-nuevo-habitual');
+  if(inputHabitual){
+    inputHabitual.oninput = e => nuevoJugadorHabitualInput = e.target.value;
+    inputHabitual.addEventListener('keydown', e => { if(e.key==='Enter'){ addJugadorFrecuente(inputHabitual.value); nuevoJugadorHabitualInput=''; render(); } });
+  }
+  const btnAddHabitual = document.getElementById('btn-add-habitual');
+  if(btnAddHabitual) btnAddHabitual.onclick = () => { addJugadorFrecuente(document.getElementById('input-nuevo-habitual').value); nuevoJugadorHabitualInput=''; render(); };
+  app.querySelectorAll('[data-remove-habitual]').forEach(el=>{
+    el.onclick = () => removeJugadorFrecuente(el.getAttribute('data-remove-habitual'));
+  });
+
+  const btnLogoutAdmin = document.getElementById('btn-logout-admin');
+  if(btnLogoutAdmin) btnLogoutAdmin.onclick = logoutAdmin;
+  const btnResetAll = document.getElementById('btn-reset-all');
+  if(btnResetAll) btnResetAll.onclick = () => {
+    modal = { type:'confirm', title:'¿Borrar todos los datos?', text:'Se eliminará todo el historial de jornadas, goles y estadísticas. Esta acción no se puede deshacer.',
+      onConfirm: () => { state = {currentJornadaId:null, jornadas:[]}; modal=null; saveState(); render(); } };
+    render();
+  };
+}
+
+/* ---------- Init ---------- */
+loadState();
+setInterval(pollRemote, 4000);
+setInterval(() => {
+  const j = getCurrentJornada();
+  const p = getPartidoActual(j);
+  if(p && p.timer.running && activeTab === 'marcador' && !modal){
+    const clockEl = document.querySelector('.jm-clock');
+    if(clockEl){
+      const lbl = clockEl.querySelector('.lbl');
+      clockEl.innerHTML = '';
+      if(lbl) clockEl.appendChild(lbl);
+      clockEl.appendChild(document.createTextNode(fmtClock(elapsedSeconds(p.timer))));
+    }
+  }
+}, 1000);
+</script>
+</body>
+</html>
