@@ -665,8 +665,38 @@ function resolverPartido(resultado){
   p.timer.accumulatedSeconds = elapsedSeconds(p.timer);
   p.timer.running = false; p.timer.startedAt = null;
   p.estado = 'finalizado';
-  p.resultado = resultado; // 'IZQ' | 'DER' | 'EMPATE'
 
+  if(resultado === 'EMPATE' && p.equipoEsperaId){
+    // 3 equipos: preguntar si se define por penales antes de decidir la rotación
+    const eqIzq = getEquipo(j, p.equipoIzqId), eqDer = getEquipo(j, p.equipoDerId);
+    modal = { type:'empate-3-equipos', eqIzqNombre: eqIzq.nombre, eqDerNombre: eqDer.nombre };
+    render();
+    return;
+  }
+
+  p.resultado = resultado; // 'IZQ' | 'DER' | 'EMPATE'
+  continuarTrasResultado(j, p);
+}
+function elegirDefinirPenales(siDefine){
+  const j = getCurrentJornada(); const p = j.partidos[j.partidos.length-1];
+  if(!p) return;
+  if(!siDefine){
+    p.resultado = 'EMPATE';
+    continuarTrasResultado(j, p);
+    return;
+  }
+  const eqIzq = getEquipo(j, p.equipoIzqId), eqDer = getEquipo(j, p.equipoDerId);
+  modal = { type:'penales-ganador', eqIzqNombre: eqIzq.nombre, eqDerNombre: eqDer.nombre };
+  render();
+}
+function resolverPenales(resultado){
+  const j = getCurrentJornada(); const p = j.partidos[j.partidos.length-1];
+  if(!p) return;
+  p.resultado = resultado; // 'IZQ' | 'DER'
+  p.definidoPorPenales = true;
+  continuarTrasResultado(j, p);
+}
+function continuarTrasResultado(j, p){
   if(!p.equipoEsperaId){
     // Jornada de 2 equipos: se repite el mismo enfrentamiento
     modal = null;
@@ -674,9 +704,8 @@ function resolverPartido(resultado){
     saveState(); render();
     return;
   }
-
-  if(resultado === 'EMPATE'){
-    // Con 3 equipos y empate, el admin elige quién sale esta ronda
+  if(p.resultado === 'EMPATE'){
+    // Empate sin definir por penales: el admin elige quién sale esta ronda
     modal = {
       type:'elegir-sale', equipos: j.equipos.map(e=>({id:e.id, nombre:e.nombre})),
       partidoEquipos:[p.equipoIzqId, p.equipoDerId, p.equipoEsperaId]
@@ -684,9 +713,8 @@ function resolverPartido(resultado){
     render();
     return;
   }
-
-  const ganadorId = resultado === 'IZQ' ? p.equipoIzqId : p.equipoDerId;
-  const perdedorId = resultado === 'IZQ' ? p.equipoDerId : p.equipoIzqId;
+  const ganadorId = p.resultado === 'IZQ' ? p.equipoIzqId : p.equipoDerId;
+  const perdedorId = p.resultado === 'IZQ' ? p.equipoDerId : p.equipoIzqId;
   modal = null;
   crearPartido(j, ganadorId, p.equipoEsperaId, perdedorId);
   saveState(); render();
@@ -709,10 +737,18 @@ function finalizarJornada(){
     showToast('Primero finaliza el partido en curso (botón "Finalizar partido")');
     return;
   }
-  modal = { type:'confirm', title:'¿Finalizar la jornada?', text:'La jornada pasará al historial con el equipo (o equipos) ganador según los partidos acumulados.',
+  if(j.partidos.length === 0){
+    showToast('Todavía no se ha jugado ningún partido en esta jornada');
+    return;
+  }
+  modal = { type:'confirm', title:'¿Finalizar la jornada?', text:'La jornada pasará al historial con el equipo (o equipos) ganador según los partidos acumulados. Verás un resumen al confirmar.',
     onConfirm: () => {
       j.estado = 'finalizado';
-      state.currentJornadaId = null; modal = null; saveState(); render();
+      const resumen = jornadaResumen(j);
+      state.currentJornadaId = null;
+      saveState();
+      modal = { type:'resumen-jornada', jornada: j, resumen };
+      render();
     } };
   render();
 }
@@ -741,6 +777,25 @@ function ganadoresJornada(j){
   const ganadores = j.equipos.filter(e => conteo[e.id] === max);
   const empateTotal = ganadores.length === j.equipos.length;
   return { conteo, max, ganadores, empateTotal };
+}
+function jornadaResumen(j){
+  const { conteo, ganadores, empateTotal } = ganadoresJornada(j);
+  const golesPorJugador = {};
+  let totalGoles = 0, duracionTotal = 0, totalTarjetas = 0;
+  j.partidos.forEach(p => {
+    duracionTotal += elapsedSeconds(p.timer);
+    totalTarjetas += p.tarjetas.length;
+    p.goles.forEach(g => {
+      golesPorJugador[g.jugador] = (golesPorJugador[g.jugador]||0) + 1;
+      totalGoles++;
+    });
+  });
+  let goleadores = [], max = 0;
+  Object.entries(golesPorJugador).forEach(([nombre,goles]) => {
+    if(goles > max){ max = goles; goleadores = [{nombre,goles}]; }
+    else if(goles === max && max > 0){ goleadores.push({nombre,goles}); }
+  });
+  return { conteo, ganadores, empateTotal, totalGoles, totalTarjetas, duracionTotal, goleadores, totalPartidos: j.partidos.length };
 }
 
 /* ---------- Estadísticas globales (por jugador) ---------- */
@@ -917,6 +972,7 @@ function renderMarcador(j){
         <div class="mini-tabla-wins">${conteo[e.id]||0}</div>
         <div class="mini-tabla-wins-lbl">partidos ganados</div>
       </div>`).join('')}</div>
+    ${isAdmin ? `<button class="btn btn-outline btn-sm btn-block" id="btn-finalizar-jornada-top">🏁 Finalizar jornada</button>` : ''}
   </div>`;
 
   // Rosters de los 2 equipos activos
@@ -1146,7 +1202,7 @@ function renderHistorial(){
           ${j.partidos.map(p=>{
             const eqIzq=getEquipo(j,p.equipoIzqId), eqDer=getEquipo(j,p.equipoDerId);
             const gI=p.goles.filter(g=>g.equipoId===p.equipoIzqId).length, gD=p.goles.filter(g=>g.equipoId===p.equipoDerId).length;
-            return `<div class="hist-partido-row">Partido ${p.numero}: ${escapeHtml(eqIzq.nombre)} ${gI} - ${gD} ${escapeHtml(eqDer.nombre)} ${p.resultado==='EMPATE'?'(empate)':''}</div>`;
+            return `<div class="hist-partido-row">Partido ${p.numero}: ${escapeHtml(eqIzq.nombre)} ${gI} - ${gD} ${escapeHtml(eqDer.nombre)} ${p.resultado==='EMPATE'?'(empate)':(p.definidoPorPenales?'(definido por penales)':'')}</div>`;
           }).join('')}
         </div>
       </div>`;
@@ -1221,22 +1277,74 @@ function renderModal(){
         return `<button class="modal-choice-btn" data-sale="${id}">${escapeHtml(nombre)} espera</button>`;
       }).join('')}
     </div>`;
+  } else if(modal.type === 'empate-3-equipos'){
+    wrap.innerHTML = `<div class="modal-box">
+      <div class="modal-title">Empate — ¿cómo se resuelve?</div>
+      <div class="modal-txt">Fue empate entre ${escapeHtml(modal.eqIzqNombre)} y ${escapeHtml(modal.eqDerNombre)}. ¿Lo definen por penales, o lo dejan como empate y eligen quién sale esta ronda?</div>
+      <button class="modal-choice-btn" data-penales="si">🥅 Definir por penales</button>
+      <button class="modal-choice-btn" data-penales="no">🤝 Dejarlo empatado</button>
+      <div class="modal-actions"><button class="btn btn-outline" id="btn-modal-cancel">Cancelar</button></div>
+    </div>`;
+  } else if(modal.type === 'penales-ganador'){
+    wrap.innerHTML = `<div class="modal-box">
+      <div class="modal-title">¿Quién ganó los penales?</div>
+      <div class="modal-txt">Ese equipo se queda jugando y avanza en la rotación como ganador del partido.</div>
+      <button class="modal-choice-btn" data-resultado-penales="IZQ">🥅 ${escapeHtml(modal.eqIzqNombre)}</button>
+      <button class="modal-choice-btn" data-resultado-penales="DER">🥅 ${escapeHtml(modal.eqDerNombre)}</button>
+      <div class="modal-actions"><button class="btn btn-outline" id="btn-modal-cancel">Cancelar</button></div>
+    </div>`;
+  } else if(modal.type === 'resumen-jornada'){
+    const { jornada:j, resumen:r } = modal;
+    wrap.innerHTML = `<div class="modal-box">
+      <div class="modal-title">🏁 Resumen — Jornada ${j.numero}</div>
+      <div class="modal-txt" style="font-weight:700;font-size:15px;color:${r.empateTotal?'var(--ink)':'var(--gold)'};">
+        ${r.empateTotal ? '🤝 La jornada quedó empatada entre todos los equipos' : '🏆 Ganador'+(r.ganadores.length>1?'es':'')+': '+r.ganadores.map(g=>escapeHtml(g.nombre)).join(' y ')}
+      </div>
+      <div class="mini-tabla" style="margin-top:4px;">${j.equipos.map(e=>`
+        <div class="mini-tabla-item">
+          <div class="mini-tabla-name"><span class="jm-team-swatch" style="background:${e.color}"></span>${escapeHtml(e.nombre)}</div>
+          <div class="mini-tabla-wins">${r.conteo[e.id]||0}</div>
+          <div class="mini-tabla-wins-lbl">partidos ganados</div>
+        </div>`).join('')}</div>
+      <div class="hint" style="margin-top:14px;font-size:13px;line-height:1.9;">
+        ⚽ ${r.totalGoles} gol(es) en ${r.totalPartidos} partido(s)${r.totalTarjetas>0?' · 🟨 '+r.totalTarjetas+' tarjeta(s)':''}<br>
+        ⏱ ${fmtClock(r.duracionTotal)} jugados en total<br>
+        ${r.goleadores.length>0 ? '🥇 Goleador'+(r.goleadores.length>1?'es':'')+' del día: '+r.goleadores.map(g=>escapeHtml(g.nombre)+' ('+g.goles+')').join(', ') : ''}
+      </div>
+      <div class="modal-actions"><button class="btn btn-gold" id="btn-modal-cerrar-resumen">Cerrar</button></div>
+    </div>`;
   }
 
   document.body.appendChild(wrap);
   const pwInput = document.getElementById('input-admin-pw');
   if(pwInput) pwInput.addEventListener('keydown', e => { if(e.key === 'Enter') tryAdminLogin(pwInput.value); });
   const cancelBtn = document.getElementById('btn-modal-cancel');
-  if(cancelBtn) cancelBtn.onclick = () => { modal = null; render(); };
+  if(cancelBtn) cancelBtn.onclick = () => {
+    if(modal && (modal.type === 'empate-3-equipos' || modal.type === 'penales-ganador')){
+      // el partido ya se había marcado 'finalizado' tentativamente: lo regresamos a en vivo
+      const j = getCurrentJornada();
+      const p = j && j.partidos[j.partidos.length-1];
+      if(p && p.estado === 'finalizado' && !p.resultado) p.estado = 'en_vivo';
+    }
+    modal = null; render();
+  };
   const loginBtn = document.getElementById('btn-modal-login');
   if(loginBtn) loginBtn.onclick = () => tryAdminLogin(document.getElementById('input-admin-pw').value);
   const confirmBtn = document.getElementById('btn-modal-confirm');
   if(confirmBtn) confirmBtn.onclick = () => { if(modal && modal.onConfirm) modal.onConfirm(); };
+  const cerrarResumenBtn = document.getElementById('btn-modal-cerrar-resumen');
+  if(cerrarResumenBtn) cerrarResumenBtn.onclick = () => { modal = null; render(); };
   wrap.querySelectorAll('[data-resultado]').forEach(el=>{
     el.onclick = () => resolverPartido(el.getAttribute('data-resultado'));
   });
   wrap.querySelectorAll('[data-sale]').forEach(el=>{
     el.onclick = () => resolverQuienSale(el.getAttribute('data-sale'));
+  });
+  wrap.querySelectorAll('[data-penales]').forEach(el=>{
+    el.onclick = () => elegirDefinirPenales(el.getAttribute('data-penales') === 'si');
+  });
+  wrap.querySelectorAll('[data-resultado-penales]').forEach(el=>{
+    el.onclick = () => resolverPenales(el.getAttribute('data-resultado-penales'));
   });
 }
 
@@ -1293,6 +1401,8 @@ function attachHandlers(){
   if(btnFinalizarPartido) btnFinalizarPartido.onclick = abrirModalFinalizarPartido;
   const btnFinalizarJornada = document.getElementById('btn-finalizar-jornada');
   if(btnFinalizarJornada) btnFinalizarJornada.onclick = finalizarJornada;
+  const btnFinalizarJornadaTop = document.getElementById('btn-finalizar-jornada-top');
+  if(btnFinalizarJornadaTop) btnFinalizarJornadaTop.onclick = finalizarJornada;
   const btnCancelJ = document.getElementById('btn-cancelar-jornada');
   if(btnCancelJ) btnCancelJ.onclick = cancelarJornada;
 
