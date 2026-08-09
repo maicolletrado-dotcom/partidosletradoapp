@@ -698,9 +698,9 @@ function resolverPenales(resultado){
 }
 function continuarTrasResultado(j, p){
   if(!p.equipoEsperaId){
-    // Jornada de 2 equipos: se repite el mismo enfrentamiento
+    // Jornada de 2 equipos: se sugiere repetir el mismo enfrentamiento
     modal = null;
-    crearPartido(j, p.equipoIzqId, p.equipoDerId, null);
+    j.proximoPartido = { izqId: p.equipoIzqId, derId: p.equipoDerId, esperaId: null };
     saveState(); render();
     return;
   }
@@ -716,7 +716,7 @@ function continuarTrasResultado(j, p){
   const ganadorId = p.resultado === 'IZQ' ? p.equipoIzqId : p.equipoDerId;
   const perdedorId = p.resultado === 'IZQ' ? p.equipoDerId : p.equipoIzqId;
   modal = null;
-  crearPartido(j, ganadorId, p.equipoEsperaId, perdedorId);
+  j.proximoPartido = { izqId: ganadorId, derId: p.equipoEsperaId, esperaId: perdedorId };
   saveState(); render();
 }
 function resolverQuienSale(saleId){
@@ -725,7 +725,14 @@ function resolverQuienSale(saleId){
   const todos = [p.equipoIzqId, p.equipoDerId, p.equipoEsperaId];
   const quedan = todos.filter(id => id !== saleId);
   modal = null;
-  crearPartido(j, quedan[0], quedan[1], saleId);
+  j.proximoPartido = { izqId: quedan[0], derId: quedan[1], esperaId: saleId };
+  saveState(); render();
+}
+function iniciarSiguientePartido(){
+  const j = getCurrentJornada(); if(!j || !j.proximoPartido) return;
+  const { izqId, derId, esperaId } = j.proximoPartido;
+  j.proximoPartido = null;
+  crearPartido(j, izqId, derId, esperaId);
   saveState(); render();
 }
 
@@ -921,8 +928,9 @@ function renderMarcador(j){
 
   const p = getPartidoActual(j);
 
-  // Si no hay partido en vivo, la jornada ya terminó de facto (esperando "Finalizar jornada")
+  // Si no hay partido en vivo pero hay uno propuesto, se espera decisión del admin
   if(!p){
+    if(j.proximoPartido) return renderEntrePartidos(j);
     return renderCierreJornada(j);
   }
 
@@ -1040,6 +1048,36 @@ function renderTeamCard(j, p, eq){
       row += `</div>`;
       return row;
     }).join('');
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderEntrePartidos(j){
+  const { conteo } = ganadoresJornada(j);
+  const np = j.proximoPartido;
+  const eqIzq = getEquipo(j, np.izqId), eqDer = getEquipo(j, np.derId);
+  const eqEspera = np.esperaId ? getEquipo(j, np.esperaId) : null;
+
+  let html = `<div class="card">
+    <div class="card-title">Jornada ${j.numero} · ${j.fecha}</div>
+    <div class="mini-tabla">${j.equipos.map(e=>`
+      <div class="mini-tabla-item">
+        <div class="mini-tabla-name"><span class="jm-team-swatch" style="background:${e.color}"></span>${escapeHtml(e.nombre)}</div>
+        <div class="mini-tabla-wins">${conteo[e.id]||0}</div>
+        <div class="mini-tabla-wins-lbl">partidos ganados</div>
+      </div>`).join('')}</div>
+    <div class="hint" style="margin-top:14px;font-size:13px;">
+      ⏭ Próximo partido: <b>${escapeHtml(eqIzq.nombre)}</b> vs <b>${escapeHtml(eqDer.nombre)}</b>${eqEspera?' · espera: '+escapeHtml(eqEspera.nombre):''}
+    </div>`;
+
+  if(isAdmin){
+    html += `<div class="jm-controls" style="margin-top:14px;">
+      <button class="btn btn-gold" id="btn-jugar-siguiente">▶ Jugar siguiente partido</button>
+      <button class="btn btn-outline" id="btn-finalizar-jornada">🏁 Finalizar jornada aquí</button>
+    </div>`;
+  } else {
+    html += `<div class="hint">Esperando que el admin inicie el siguiente partido o cierre la jornada.</div>`;
   }
   html += `</div>`;
   return html;
@@ -1403,6 +1441,8 @@ function attachHandlers(){
   if(btnFinalizarJornada) btnFinalizarJornada.onclick = finalizarJornada;
   const btnFinalizarJornadaTop = document.getElementById('btn-finalizar-jornada-top');
   if(btnFinalizarJornadaTop) btnFinalizarJornadaTop.onclick = finalizarJornada;
+  const btnJugarSiguiente = document.getElementById('btn-jugar-siguiente');
+  if(btnJugarSiguiente) btnJugarSiguiente.onclick = iniciarSiguientePartido;
   const btnCancelJ = document.getElementById('btn-cancelar-jornada');
   if(btnCancelJ) btnCancelJ.onclick = cancelarJornada;
 
