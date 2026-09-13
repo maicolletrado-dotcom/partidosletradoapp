@@ -5,30 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Partidos Letrado APP</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 :root{
-  --bg: #0a1f14;
-  --bg-alt: #12301f;
-  --bg-panel: #163a26;
-  --line: rgba(241,250,238,0.10);
-  --line-strong: rgba(241,250,238,0.22);
-  --ink: #f1faee;
-  --ink-dim: #9fc2ae;
-  --ink-dimmer: #6f9382;
-  --gold: #f2b705;
-  --gold-glow: rgba(242,183,5,0.35);
-  --red-card: #e63946;
-  --green-go: #52b788;
-  --blue: #3a86ff;
+  --bg: #12141c;
+  --bg-alt: #1a1d28;
+  --bg-panel: #1f2330;
+  --line: rgba(244,237,224,0.08);
+  --line-strong: rgba(244,237,224,0.18);
+  --ink: #f4ede0;
+  --ink-dim: #a29eb0;
+  --ink-dimmer: #6d6a7c;
+  --gold: #e8a33d;
+  --gold-glow: rgba(232,163,61,0.32);
+  --red-card: #e2506a;
+  --green-go: #3ec9b0;
+  --blue: #5b8dee;
+  --font-serif: 'Fraunces', serif;
 }
 
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;}
 body{
   background:
-    repeating-linear-gradient(100deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 40px, transparent 40px, transparent 80px),
-    radial-gradient(ellipse at top, #123321 0%, var(--bg) 60%);
+    radial-gradient(circle at 1px 1px, rgba(244,237,224,0.05) 1px, transparent 1px) 0 0/26px 26px,
+    radial-gradient(ellipse at top, #232739 0%, var(--bg) 62%);
   color:var(--ink);
   font-family:'Inter',sans-serif;
   min-height:100vh;
@@ -69,7 +70,7 @@ body{
 /* ---------- Scoreboard (signature element) ---------- */
 .jumbotron{
   position:relative;border-radius:18px;overflow:hidden;
-  background:linear-gradient(180deg,#0d2617 0%,#081c10 100%);
+  background:linear-gradient(180deg,#242939 0%,#12141c 100%);
   border:1px solid var(--line-strong);
   padding:22px 16px 18px;margin-bottom:16px;
   box-shadow: inset 0 0 60px rgba(0,0,0,0.4);
@@ -273,6 +274,74 @@ body{
   animation: toastIn 0.25s ease-out;max-width:90vw;text-align:center;
 }
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+/* ---------- Nuevos componentes (rediseño) ---------- */
+.eyebrow{
+  font-family:var(--font-serif);font-style:italic;font-size:12.5px;color:var(--gold);
+  letter-spacing:0.3px;margin-bottom:2px;display:block;
+}
+.player-link{
+  color:var(--ink);text-decoration:none;border-bottom:1px dashed var(--line-strong);cursor:pointer;font-weight:700;
+}
+.player-link:hover{color:var(--gold);border-color:var(--gold);}
+.back-link{
+  background:none;border:none;color:var(--ink-dim);font-size:13px;font-weight:600;cursor:pointer;
+  padding:4px 0;margin-bottom:10px;display:inline-flex;align-items:center;gap:5px;
+}
+.back-link:hover{color:var(--gold);}
+
+.medallion-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.medallion{
+  display:flex;align-items:center;gap:7px;background:var(--bg-alt);border:1px solid var(--line-strong);
+  border-radius:100px;padding:7px 13px 7px 9px;font-size:12px;font-weight:700;color:var(--ink);
+}
+.medallion .medal-icon{
+  width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%, var(--gold), #9a6a1e);
+  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;
+}
+
+.fact-card{
+  background:var(--bg-panel);border:1px solid var(--line);border-left:3px solid var(--gold);
+  border-radius:10px;padding:13px 15px;margin-bottom:10px;font-size:13px;color:var(--ink-dim);line-height:1.5;
+}
+.fact-card b{color:var(--ink);}
+.fact-icon{font-size:16px;margin-right:6px;}
+
+.player-header{
+  display:flex;align-items:center;gap:14px;padding:6px 0 16px;border-bottom:1px solid var(--line);margin-bottom:14px;
+}
+.player-avatar{
+  width:54px;height:54px;border-radius:14px;background:linear-gradient(155deg, var(--gold), #9a6a1e);
+  display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue';font-size:26px;color:#1a1400;flex-shrink:0;
+}
+.player-header-name{font-family:'Bebas Neue';font-size:26px;letter-spacing:0.5px;}
+.player-header-sub{font-size:12px;color:var(--ink-dimmer);margin-top:2px;}
+
+.stat-pill-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;}
+.stat-pill{
+  flex:1;min-width:88px;background:var(--bg-alt);border:1px solid var(--line);border-radius:10px;
+  padding:10px;text-align:center;
+}
+.stat-pill-val{font-family:'Bebas Neue';font-size:24px;color:var(--gold);}
+.stat-pill-lbl{font-size:9.5px;color:var(--ink-dimmer);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+.bar-chart-wrap{margin-top:6px;overflow-x:auto;}
+.rank-list-row{
+  display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line);font-size:12.5px;
+}
+.rank-list-row:last-child{border-bottom:none;}
+.rank-list-name{color:var(--ink-dim);font-weight:600;}
+.rank-list-val{font-family:'JetBrains Mono';color:var(--gold);font-weight:700;}
+
+.edit-name-row{display:flex;align-items:center;gap:8px;padding:8px 6px;border-bottom:1px solid var(--line);}
+.edit-name-row:last-child{border-bottom:none;}
+
+.whatsapp-btn{
+  background:#25D366;color:#062b13;border:none;border-radius:9px;font-weight:700;font-size:13px;
+  padding:9px 15px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+}
+.whatsapp-btn:hover{filter:brightness(1.05);}
+
+.badge-jornada-note{font-size:12px;color:var(--gold);margin-top:6px;}
 </style>
 </head>
 <body>
@@ -332,6 +401,7 @@ const SWATCHES = [
 let state = { currentJornadaId: null, jornadas: [], jugadoresFrecuentes: [] };
 let isAdmin = false;
 let activeTab = 'marcador';
+let selectedJugador = null;
 let loaded = false;
 let lastLocalWrite = 0;
 let goalFlashUntil = 0;
@@ -808,7 +878,7 @@ function jornadaResumen(j){
 /* ---------- Estadísticas globales (por jugador) ---------- */
 function jugadorEnEquipo(j, equipo, nombre){ return equipo.jugadores.includes(nombre); }
 
-function playerResultSequence(name){
+function playerResultSequenceDetailed(name){
   const finalizadas = state.jornadas.filter(j => j.estado === 'finalizado').sort((a,b)=>a.numero-b.numero);
   const seq = [];
   finalizadas.forEach(j => {
@@ -819,10 +889,11 @@ function playerResultSequence(name){
     if(empateTotal) resultado = 'E';
     else if(ganadores.some(g => g.id === equipoJugador.id)) resultado = 'V';
     else resultado = 'D';
-    seq.push(resultado);
+    seq.push({ jornadaId: j.id, jornadaNumero: j.numero, resultado });
   });
   return seq;
 }
+function playerResultSequence(name){ return playerResultSequenceDetailed(name).map(x=>x.resultado); }
 function computeStreaks(seq){
   if(seq.length === 0) return { rachaTipo:null, rachaCantidad:0, mejorRachaV:0 };
   const ultimo = seq[seq.length-1];
@@ -835,7 +906,7 @@ function computeStreaks(seq){
 function allTimeStats(){
   const map = {};
   function ensure(name){
-    if(!map[name]) map[name] = { nombre:name, goles:0, asistencias:0, amarillas:0, rojas:0, jornadasJugadas:new Set(), partidosJugados:0, partidosGanados:0 };
+    if(!map[name]) map[name] = { nombre:name, goles:0, asistencias:0, amarillas:0, rojas:0, jornadasJugadas:new Set(), partidosJugados:0, partidosGanados:0, botasDeOro:0 };
     return map[name];
   }
   state.jornadas.forEach(j => {
@@ -858,8 +929,12 @@ function allTimeStats(){
         if(c.tipo === 'amarilla') ensure(c.jugador).amarillas += 1; else ensure(c.jugador).rojas += 1;
       });
     });
+    if(j.estado === 'finalizado'){
+      const r = jornadaResumen(j);
+      r.goleadores.forEach(g => ensure(g.nombre).botasDeOro += 1);
+    }
   });
-  return Object.values(map).map(s => {
+  const arr = Object.values(map).map(s => {
     const seq = playerResultSequence(s.nombre);
     const streaks = computeStreaks(seq);
     return {
@@ -868,6 +943,7 @@ function allTimeStats(){
       ...streaks
     };
   }).sort((a,b)=> b.goles - a.goles || b.jornadasJugadas - a.jornadasJugadas);
+  return arr;
 }
 function rachaLabel(s){
   if(!s.rachaTipo) return '<span style="color:var(--ink-dimmer)">—</span>';
@@ -875,6 +951,181 @@ function rachaLabel(s){
   if(s.rachaTipo === 'D') return `<span style="color:var(--red-card);font-weight:700;">${s.rachaCantidad}D</span>`;
   return `<span style="color:var(--ink-dimmer);font-weight:700;">${s.rachaCantidad}E</span>`;
 }
+
+/* ---------- Insignias ---------- */
+function insigniasDeJornada(j){
+  if(j.estado !== 'finalizado') return { botaDeOro:[], murallas:[], rachasRotas:[] };
+  const r = jornadaResumen(j);
+  const botaDeOro = r.goleadores; // [{nombre,goles}]
+
+  const murallas = [];
+  const partidosPorEquipo = {};
+  j.equipos.forEach(e => partidosPorEquipo[e.id] = 0);
+  j.partidos.filter(p=>p.estado==='finalizado').forEach(p=>{
+    partidosPorEquipo[p.equipoIzqId] = (partidosPorEquipo[p.equipoIzqId]||0)+1;
+    partidosPorEquipo[p.equipoDerId] = (partidosPorEquipo[p.equipoDerId]||0)+1;
+  });
+  j.equipos.forEach(e=>{
+    const jugados = partidosPorEquipo[e.id]||0;
+    if(jugados >= 2 && (r.conteo[e.id]||0) === jugados) murallas.push(e);
+  });
+
+  const rachasRotas = [];
+  const jugadoresEnJornada = new Set();
+  j.equipos.forEach(e => e.jugadores.forEach(p => jugadoresEnJornada.add(p)));
+  jugadoresEnJornada.forEach(name => {
+    const seq = playerResultSequenceDetailed(name);
+    const idx = seq.findIndex(x => x.jornadaId === j.id);
+    if(idx > 0 && seq[idx].resultado === 'D'){
+      let racha = 0;
+      for(let i=idx-1;i>=0;i--){ if(seq[i].resultado==='V') racha++; else break; }
+      if(racha >= 2) rachasRotas.push({ nombre:name, rachaPrevia: racha });
+    }
+  });
+
+  return { botaDeOro, murallas, rachasRotas };
+}
+function insigniasGlobalesJugador(name){
+  const stats = allTimeStats();
+  const s = stats.find(x=>x.nombre===name);
+  if(!s) return [];
+  const badges = [];
+  if(stats.length && stats[0].nombre===name && stats[0].goles>0) badges.push({icon:'🥇',texto:'Goleador histórico del grupo'});
+  if(s.rachaTipo==='V' && s.rachaCantidad>=2) badges.push({icon:'🔥',texto:'En racha: '+s.rachaCantidad+' victorias seguidas'});
+  const maxRachaGrupo = Math.max(0, ...stats.map(x=>x.mejorRachaV));
+  if(s.mejorRachaV>0 && s.mejorRachaV===maxRachaGrupo) badges.push({icon:'🏅',texto:'Dueño de la mejor racha histórica ('+s.mejorRachaV+')'});
+  if(s.botasDeOro>0) badges.push({icon:'🥾',texto:'Bota de oro en '+s.botasDeOro+' jornada(s)'});
+  const partidosSinPerder = s.partidosJugados>0 && s.partidosGanados===s.partidosJugados && s.partidosJugados>=3;
+  if(partidosSinPerder) badges.push({icon:'🧱',texto:'Nunca ha perdido un partido ('+s.partidosJugados+'/'+s.partidosJugados+')'});
+  return badges;
+}
+
+/* ---------- Ficha individual de jugador ---------- */
+function fichaJugador(name){
+  const stats = allTimeStats();
+  const s = stats.find(x=>x.nombre===name) || { nombre:name, goles:0, asistencias:0, amarillas:0, rojas:0, jornadasJugadas:0, partidosJugados:0, partidosGanados:0, promedio:0, rachaTipo:null, rachaCantidad:0, mejorRachaV:0, botasDeOro:0 };
+
+  // Goles por jornada (para la gráfica), en orden cronológico
+  const finalizadas = state.jornadas.filter(j=>j.estado==='finalizado').sort((a,b)=>a.numero-b.numero);
+  const serieGoles = [];
+  finalizadas.forEach(j=>{
+    const jugó = j.equipos.some(e=>e.jugadores.includes(name));
+    if(!jugó) return;
+    let goles = 0;
+    j.partidos.forEach(p => p.goles.forEach(g=>{ if(g.jugador===name) goles++; }));
+    serieGoles.push({ numero:j.numero, goles });
+  });
+
+  // Compañeros más frecuentes y rivales más frecuentes
+  const compas = {}, rivales = {};
+  state.jornadas.forEach(j=>{
+    const equipoPropio = j.equipos.find(e=>e.jugadores.includes(name));
+    if(!equipoPropio) return;
+    equipoPropio.jugadores.forEach(otro=>{
+      if(otro===name) return;
+      compas[otro] = (compas[otro]||0)+1;
+    });
+    j.equipos.forEach(e=>{
+      if(e.id===equipoPropio.id) return;
+      e.jugadores.forEach(riv=>{ rivales[riv] = (rivales[riv]||0)+1; });
+    });
+  });
+  const topCompas = Object.entries(compas).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([nombre,veces])=>({nombre,veces}));
+  const topRivales = Object.entries(rivales).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([nombre,veces])=>({nombre,veces}));
+
+  return { stats: s, serieGoles, topCompas, topRivales, badges: insigniasGlobalesJugador(name) };
+}
+
+/* ---------- Datos curiosos ---------- */
+function computeCuriosidades(){
+  const finalizadas = state.jornadas.filter(j=>j.estado==='finalizado');
+  const facts = [];
+  if(finalizadas.length === 0) return facts;
+
+  const parejasEquipo = {}, parejasRival = {};
+  finalizadas.forEach(j=>{
+    const { ganadores, empateTotal } = ganadoresJornada(j);
+    j.equipos.forEach(eq=>{
+      for(let a=0;a<eq.jugadores.length;a++){
+        for(let b=a+1;b<eq.jugadores.length;b++){
+          const par = [eq.jugadores[a], eq.jugadores[b]].sort();
+          const key = par.join('|');
+          if(!parejasEquipo[key]) parejasEquipo[key] = { jugadores:par, juntos:0, ganaronJuntos:0 };
+          parejasEquipo[key].juntos++;
+          if(!empateTotal && ganadores.some(g=>g.id===eq.id)) parejasEquipo[key].ganaronJuntos++;
+        }
+      }
+    });
+    for(let x=0;x<j.equipos.length;x++){
+      for(let y=x+1;y<j.equipos.length;y++){
+        j.equipos[x].jugadores.forEach(p1=>{
+          j.equipos[y].jugadores.forEach(p2=>{
+            const par = [p1,p2].sort();
+            const key = par.join('|');
+            if(!parejasRival[key]) parejasRival[key] = { jugadores:par, veces:0 };
+            parejasRival[key].veces++;
+          });
+        });
+      }
+    }
+  });
+
+  const duplaTop = Object.values(parejasEquipo).sort((a,b)=>b.juntos-a.juntos)[0];
+  if(duplaTop && duplaTop.juntos >= 2){
+    facts.push({icon:'🤝', html:`<b>${escapeHtml(duplaTop.jugadores[0])}</b> y <b>${escapeHtml(duplaTop.jugadores[1])}</b> han sido compañeros de equipo en <b>${duplaTop.juntos}</b> jornada(s), ganando juntos <b>${duplaTop.ganaronJuntos}</b> de esas veces.`});
+  }
+  const rivalTop = Object.values(parejasRival).sort((a,b)=>b.veces-a.veces)[0];
+  if(rivalTop && rivalTop.veces >= 2){
+    facts.push({icon:'⚔️', html:`<b>${escapeHtml(rivalTop.jugadores[0])}</b> y <b>${escapeHtml(rivalTop.jugadores[1])}</b> se han enfrentado en equipos rivales <b>${rivalTop.veces}</b> jornada(s) — la rivalidad más frecuente del grupo.`});
+  }
+
+  let jornadaMasGoles = null, maxGolesJ = -1;
+  finalizadas.forEach(j=>{ let g=0; j.partidos.forEach(p=>g+=p.goles.length); if(g>maxGolesJ){maxGolesJ=g; jornadaMasGoles=j;} });
+  if(jornadaMasGoles) facts.push({icon:'⚽', html:`La jornada más goleadora fue la <b>#${jornadaMasGoles.numero}</b> (${jornadaMasGoles.fecha}) con <b>${maxGolesJ}</b> goles en total.`});
+
+  let partidoMasLargo = null, maxDur = -1;
+  finalizadas.forEach(j=>j.partidos.forEach(p=>{ const d=elapsedSeconds(p.timer); if(d>maxDur){maxDur=d; partidoMasLargo={j,p};} }));
+  if(partidoMasLargo && maxDur>0){
+    const eqI = getEquipo(partidoMasLargo.j, partidoMasLargo.p.equipoIzqId), eqD = getEquipo(partidoMasLargo.j, partidoMasLargo.p.equipoDerId);
+    facts.push({icon:'⏱', html:`El partido más largo duró <b>${fmtClock(maxDur)}</b>: ${escapeHtml(eqI?.nombre||'?')} vs ${escapeHtml(eqD?.nombre||'?')} (jornada #${partidoMasLargo.j.numero}).`});
+  }
+
+  const stats = allTimeStats();
+  const masJornadas = stats.slice().sort((a,b)=>b.jornadasJugadas-a.jornadasJugadas)[0];
+  if(masJornadas && masJornadas.jornadasJugadas>0) facts.push({icon:'📅', html:`<b>${escapeHtml(masJornadas.nombre)}</b> es quien más jornadas ha jugado: <b>${masJornadas.jornadasJugadas}</b>.`});
+
+  const conRacha = stats.filter(s=>s.rachaTipo==='V' && s.rachaCantidad>=2).sort((a,b)=>b.rachaCantidad-a.rachaCantidad)[0];
+  if(conRacha) facts.push({icon:'🔥', html:`<b>${escapeHtml(conRacha.nombre)}</b> llega en racha activa de <b>${conRacha.rachaCantidad}</b> victorias seguidas.`});
+
+  const totalGolesGlobal = stats.reduce((a,s)=>a+s.goles,0);
+  const promedioGolesJornada = finalizadas.length ? (totalGolesGlobal/finalizadas.length) : 0;
+  if(finalizadas.length>0) facts.push({icon:'📊', html:`En promedio se marcan <b>${promedioGolesJornada.toFixed(1)}</b> goles por jornada, a lo largo de <b>${finalizadas.length}</b> jornada(s) jugadas.`});
+
+  return facts;
+}
+
+/* ---------- Renombrar jugador (sin perder estadísticas) ---------- */
+function renombrarJugador(oldName, newName){
+  const nuevo = (newName||'').trim();
+  if(!nuevo || nuevo === oldName) return;
+  const yaExiste = state.jugadoresFrecuentes.some(n => n.toLowerCase()===nuevo.toLowerCase() && n!==oldName);
+  if(yaExiste){ showToast('Ya existe un jugador habitual con ese nombre'); return; }
+
+  state.jugadoresFrecuentes = state.jugadoresFrecuentes.map(n => n===oldName ? nuevo : n);
+  state.jornadas.forEach(j=>{
+    j.equipos.forEach(eq=>{ eq.jugadores = eq.jugadores.map(n=>n===oldName?nuevo:n); });
+    j.partidos.forEach(p=>{
+      p.goles.forEach(g=>{
+        if(g.jugador===oldName) g.jugador=nuevo;
+        if(g.asistencia===oldName) g.asistencia=nuevo;
+      });
+      p.tarjetas.forEach(c=>{ if(c.jugador===oldName) c.jugador=nuevo; });
+    });
+  });
+  saveState();
+  showToast('Jugador renombrado: '+oldName+' → '+nuevo);
+}
+
 
 /* ---------- Render principal ---------- */
 function render(){
@@ -892,6 +1143,8 @@ function render(){
   else if(activeTab === 'goleadores') html += renderGoleadores();
   else if(activeTab === 'historial') html += renderHistorial();
   else if(activeTab === 'jugadores') html += renderJugadoresTab();
+  else if(activeTab === 'curiosidades') html += renderCuriosidades();
+  else if(activeTab === 'ficha') html += renderFichaJugador(selectedJugador);
 
   if(isAdmin && activeTab === 'marcador') html += renderAdminZone();
 
@@ -913,8 +1166,14 @@ function renderTopbar(){
   </div>`;
 }
 function renderTabs(){
-  const tabs = [ {id:'marcador', label:'⚽ Marcador'}, {id:'jugadores', label:'👥 Jugadores'}, {id:'goleadores', label:'🏆 Goleadores'}, {id:'historial', label:'📅 Historial'} ];
-  return `<div class="tabs">${tabs.map(t=>`<button class="tab-btn ${activeTab===t.id?'active':''}" data-tab="${t.id}">${t.label}</button>`).join('')}</div>`;
+  const tabs = [ {id:'marcador', label:'⚽ Marcador'}, {id:'jugadores', label:'👥 Jugadores'}, {id:'goleadores', label:'🏆 Goleadores'}, {id:'historial', label:'📅 Historial'}, {id:'curiosidades', label:'🎲 Curiosidades'} ];
+  const activeMatch = activeTab === 'ficha' ? '' : activeTab;
+  return `<div class="tabs">${tabs.map(t=>`<button class="tab-btn ${activeMatch===t.id?'active':''}" data-tab="${t.id}">${t.label}</button>`).join('')}</div>`;
+}
+let fichaOrigenTab = 'marcador';
+function abrirFichaJugador(name){
+  fichaOrigenTab = (activeTab === 'ficha') ? fichaOrigenTab : activeTab;
+  selectedJugador = name; activeTab = 'ficha'; render();
 }
 
 function renderMarcador(j){
@@ -1168,7 +1427,7 @@ function renderNuevaJornadaForm(){
 function renderJugadoresTab(){
   let html = `<div class="card">
     <div class="card-title">👥 Jugadores habituales</div>
-    <div class="hint">Esta es la lista de la familia que suele jugar. Al armar una jornada nueva, podrás asignarlos a un equipo con un solo toque en vez de escribir el nombre cada vez.</div>`;
+    <div class="hint">Esta es la lista de la familia que suele jugar. Al armar una jornada nueva, podrás asignarlos a un equipo con un solo toque en vez de escribir el nombre cada vez. ${isAdmin?'Toca el lápiz para corregir un nombre (ej. "Hijo de Pedro" → "Santiago") sin perder sus estadísticas.':''}</div>`;
 
   if(isAdmin){
     html += `<div class="add-player-row" style="margin-top:12px;">
@@ -1182,9 +1441,9 @@ function renderJugadoresTab(){
     html += `<div class="empty-state" style="padding:20px 0;">Todavía no hay jugadores habituales guardados.</div>`;
   } else {
     html += state.jugadoresFrecuentes.map(name => `
-      <div class="player-row">
-        <span class="player-name">${escapeHtml(name)}</span>
-        ${isAdmin ? `<button class="icon-btn remove" data-remove-habitual="${escapeHtml(name)}">✕</button>` : ''}
+      <div class="edit-name-row">
+        <span class="player-name player-link" data-open-ficha="${escapeHtml(name)}">${escapeHtml(name)}</span>
+        ${isAdmin ? `<button class="icon-btn" data-rename-habitual="${escapeHtml(name)}">✏️</button><button class="icon-btn remove" data-remove-habitual="${escapeHtml(name)}">✕</button>` : ''}
       </div>`).join('');
   }
   html += `</div></div>`;
@@ -1205,7 +1464,7 @@ function renderGoleadores(){
       <tbody>
       ${stats.map((s,i)=>`<tr>
         <td><span class="rank-num">${i+1}</span></td>
-        <td>${escapeHtml(s.nombre)}</td>
+        <td><span class="player-link" data-open-ficha="${escapeHtml(s.nombre)}">${escapeHtml(s.nombre)}</span></td>
         <td>${s.goles}</td>
         <td>${s.jornadasJugadas}</td>
         <td>${s.promedio.toFixed(2)}</td>
@@ -1230,22 +1489,118 @@ function renderHistorial(){
   return `<div class="card"><div class="card-title">📅 Jornadas jugadas</div>
     ${finalizadas.map(j => {
       const { conteo, ganadores, empateTotal } = ganadoresJornada(j);
+      const r = jornadaResumen(j);
+      const ins = insigniasDeJornada(j);
       const isOpen = openHistoryIds.has(j.id);
       const resumenEquipos = j.equipos.map(e => escapeHtml(e.nombre)+' '+(conteo[e.id]||0)).join(' · ');
       const ganadorTxt = empateTotal ? '🤝 Empate' : '🏆 '+ganadores.map(g=>escapeHtml(g.nombre)).join(' y ');
+      const todasTarjetas = j.partidos.flatMap(p=>p.tarjetas.map(c=>({...c, partidoNum:p.numero})));
+
       return `<div class="hist-item ${isOpen?'open':''}" data-toggle-hist="${j.id}">
         <div class="hist-top"><span>${resumenEquipos}</span><span class="hist-winner">${ganadorTxt}</span></div>
-        <div class="hist-meta">Jornada ${j.numero} · ${j.fecha} · ${j.partidos.length} partido(s) jugados</div>
+        <div class="hist-meta">Jornada ${j.numero} · ${j.fecha} · ${r.totalPartidos} partido(s) · ${r.totalGoles} gol(es) · ${fmtClock(r.duracionTotal)} jugados</div>
         <div class="hist-detail">
+
+          <span class="eyebrow">Equipos de esta jornada</span>
+          <div class="roster-grid" style="margin-bottom:12px;">
+            ${j.equipos.map(e=>`
+              <div style="background:var(--bg-alt);border:1px solid var(--line);border-radius:9px;padding:9px 11px;">
+                <div style="font-weight:700;font-size:12.5px;margin-bottom:4px;"><span class="jm-team-swatch" style="background:${e.color}"></span>${escapeHtml(e.nombre)}</div>
+                <div style="font-size:12px;color:var(--ink-dim);">${e.jugadores.map(p=>`<span class="player-link" data-open-ficha="${escapeHtml(p)}">${escapeHtml(p)}</span>`).join(', ')||'—'}</div>
+              </div>`).join('')}
+          </div>
+
+          <span class="eyebrow">Partidos jugados</span>
           ${j.partidos.map(p=>{
             const eqIzq=getEquipo(j,p.equipoIzqId), eqDer=getEquipo(j,p.equipoDerId);
             const gI=p.goles.filter(g=>g.equipoId===p.equipoIzqId).length, gD=p.goles.filter(g=>g.equipoId===p.equipoDerId).length;
-            return `<div class="hist-partido-row">Partido ${p.numero}: ${escapeHtml(eqIzq.nombre)} ${gI} - ${gD} ${escapeHtml(eqDer.nombre)} ${p.resultado==='EMPATE'?'(empate)':(p.definidoPorPenales?'(definido por penales)':'')}</div>`;
+            return `<div class="hist-partido-row">Partido ${p.numero}: ${escapeHtml(eqIzq.nombre)} ${gI} - ${gD} ${escapeHtml(eqDer.nombre)} · ${fmtClock(elapsedSeconds(p.timer))} ${p.resultado==='EMPATE'?'(empate)':(p.definidoPorPenales?'(definido por penales)':'')}</div>`;
           }).join('')}
+
+          ${r.goleadores.length>0 ? `<span class="eyebrow" style="margin-top:12px;display:block;">Goleadores de la jornada</span>
+          <div style="font-size:12.5px;color:var(--ink-dim);margin-bottom:10px;">${r.goleadores.map(g=>`<span class="player-link" data-open-ficha="${escapeHtml(g.nombre)}">${escapeHtml(g.nombre)}</span> (${g.goles})`).join(', ')}</div>` : ''}
+
+          ${todasTarjetas.length>0 ? `<span class="eyebrow" style="display:block;">Tarjetas</span>
+          <div style="font-size:12.5px;color:var(--ink-dim);margin-bottom:10px;">${todasTarjetas.map(c=>`${c.tipo==='amarilla'?'🟨':'🟥'} ${escapeHtml(c.jugador)}`).join(', ')}</div>` : ''}
+
+          ${(ins.murallas.length>0 || ins.rachasRotas.length>0) ? `<span class="eyebrow" style="display:block;">Insignias de la jornada</span>
+          <div class="medallion-row" style="margin-top:4px;margin-bottom:4px;">
+            ${ins.murallas.map(e=>`<div class="medallion"><span class="medal-icon">🧱</span>${escapeHtml(e.nombre)} — muralla (ganó todos sus partidos)</div>`).join('')}
+            ${ins.rachasRotas.map(r2=>`<div class="medallion"><span class="medal-icon">💔</span>${escapeHtml(r2.nombre)} — le rompieron una racha de ${r2.rachaPrevia}V</div>`).join('')}
+          </div>` : ''}
         </div>
       </div>`;
     }).join('')}
   </div>`;
+}
+
+function renderCuriosidades(){
+  const facts = computeCuriosidades();
+  if(facts.length === 0){
+    return `<div class="card"><div class="empty-state"><span class="big">Todavía no hay suficientes datos</span>A medida que se jueguen más jornadas, aquí irán apareciendo datos curiosos del grupo.</div></div>`;
+  }
+  return `<div class="card">
+    <span class="eyebrow">Con base en todas las jornadas jugadas</span>
+    <div class="card-title" style="margin-top:2px;">🎲 Datos curiosos</div>
+    ${facts.map(f=>`<div class="fact-card"><span class="fact-icon">${f.icon}</span>${f.html}</div>`).join('')}
+  </div>`;
+}
+
+function svgGraficaGoles(serie){
+  if(serie.length === 0) return '<div class="hint">Aún no tiene goles registrados.</div>';
+  const w = Math.max(280, serie.length*46), h = 120, padBottom=22, padTop=14;
+  const maxGoles = Math.max(1, ...serie.map(s=>s.goles));
+  const barW = 24;
+  const bars = serie.map((s,i)=>{
+    const x = i*46 + 14;
+    const barH = ((s.goles/maxGoles) * (h-padBottom-padTop)) || 0;
+    const y = h - padBottom - barH;
+    return `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(barH,2)}" rx="4" fill="${s.goles>0?'var(--gold)':'var(--line-strong)'}"/>
+      <text x="${x+barW/2}" y="${y-5}" text-anchor="middle" font-size="11" fill="var(--ink-dim)" font-family="JetBrains Mono">${s.goles}</text>
+      <text x="${x+barW/2}" y="${h-6}" text-anchor="middle" font-size="9.5" fill="var(--ink-dimmer)" font-family="JetBrains Mono">#${s.numero}</text>`;
+  }).join('');
+  return `<div class="bar-chart-wrap"><svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${bars}</svg></div>`;
+}
+
+function renderFichaJugador(name){
+  if(!name) return `<div class="card"><div class="empty-state">Selecciona un jugador para ver su ficha.</div></div>`;
+  const f = fichaJugador(name);
+  const s = f.stats;
+  let html = `<button class="back-link" id="btn-volver-ficha">← Volver</button>
+  <div class="card">
+    <div class="player-header">
+      <div class="player-avatar">${escapeHtml(name.charAt(0).toUpperCase())}</div>
+      <div>
+        <div class="player-header-name">${escapeHtml(name)}</div>
+        <div class="player-header-sub">${s.jornadasJugadas} jornada(s) jugada(s) · ${s.partidosJugados} partido(s)</div>
+      </div>
+    </div>
+
+    <div class="stat-pill-row">
+      <div class="stat-pill"><div class="stat-pill-val">${s.goles}</div><div class="stat-pill-lbl">Goles</div></div>
+      <div class="stat-pill"><div class="stat-pill-val">${s.asistencias}</div><div class="stat-pill-lbl">Asist.</div></div>
+      <div class="stat-pill"><div class="stat-pill-val">${s.partidosGanados}/${s.partidosJugados}</div><div class="stat-pill-lbl">Ganados</div></div>
+      <div class="stat-pill"><div class="stat-pill-val">${s.promedio.toFixed(2)}</div><div class="stat-pill-lbl">Prom./jornada</div></div>
+    </div>
+
+    ${f.badges.length>0 ? `<span class="eyebrow">Insignias</span>
+    <div class="medallion-row">${f.badges.map(b=>`<div class="medallion"><span class="medal-icon">${b.icon}</span>${escapeHtml(b.texto)}</div>`).join('')}</div>` : ''}
+
+    <span class="eyebrow" style="display:block;margin-top:16px;">Goles por jornada</span>
+    ${svgGraficaGoles(f.serieGoles)}
+
+    <div class="two-col" style="margin-top:16px;">
+      <div>
+        <span class="eyebrow" style="display:block;">Compañeros frecuentes</span>
+        ${f.topCompas.length>0 ? f.topCompas.map(c=>`<div class="rank-list-row"><span class="rank-list-name player-link" data-open-ficha="${escapeHtml(c.nombre)}">${escapeHtml(c.nombre)}</span><span class="rank-list-val">${c.veces}×</span></div>`).join('') : '<div class="hint">Sin datos aún.</div>'}
+      </div>
+      <div>
+        <span class="eyebrow" style="display:block;">Rivales frecuentes</span>
+        ${f.topRivales.length>0 ? f.topRivales.map(r=>`<div class="rank-list-row"><span class="rank-list-name player-link" data-open-ficha="${escapeHtml(r.nombre)}">${escapeHtml(r.nombre)}</span><span class="rank-list-val">${r.veces}×</span></div>`).join('') : '<div class="hint">Sin datos aún.</div>'}
+      </div>
+    </div>
+  </div>`;
+  return html;
 }
 
 function renderAdminZone(){
@@ -1271,6 +1626,15 @@ function renderAdminZone(){
       <button class="btn btn-danger btn-sm" id="btn-reset-all">Borrar todos los datos</button>
     </div>
   </div>`;
+}
+
+function textoCompartirResumen(j, r){
+  let t = `⚽ *Partidos Letrado* — Jornada ${j.numero} (${j.fecha})\n\n`;
+  j.equipos.forEach(e => { t += `${e.nombre}: ${r.conteo[e.id]||0} partido(s) ganado(s)\n`; });
+  t += '\n' + (r.empateTotal ? '🤝 Jornada empatada' : '🏆 Ganador'+(r.ganadores.length>1?'es':'')+': '+r.ganadores.map(g=>g.nombre).join(' y ')) + '\n';
+  if(r.goleadores.length>0) t += `🥇 Goleador(es): ${r.goleadores.map(g=>g.nombre+' ('+g.goles+')').join(', ')}\n`;
+  t += `⚽ ${r.totalGoles} goles en ${r.totalPartidos} partido(s) · ⏱ ${fmtClock(r.duracionTotal)}`;
+  return t;
 }
 
 function renderModal(){
@@ -1333,6 +1697,7 @@ function renderModal(){
     </div>`;
   } else if(modal.type === 'resumen-jornada'){
     const { jornada:j, resumen:r } = modal;
+    const ins = insigniasDeJornada(j);
     wrap.innerHTML = `<div class="modal-box">
       <div class="modal-title">🏁 Resumen — Jornada ${j.numero}</div>
       <div class="modal-txt" style="font-weight:700;font-size:15px;color:${r.empateTotal?'var(--ink)':'var(--gold)'};">
@@ -1349,7 +1714,24 @@ function renderModal(){
         ⏱ ${fmtClock(r.duracionTotal)} jugados en total<br>
         ${r.goleadores.length>0 ? '🥇 Goleador'+(r.goleadores.length>1?'es':'')+' del día: '+r.goleadores.map(g=>escapeHtml(g.nombre)+' ('+g.goles+')').join(', ') : ''}
       </div>
-      <div class="modal-actions"><button class="btn btn-gold" id="btn-modal-cerrar-resumen">Cerrar</button></div>
+      ${(ins.murallas.length>0 || ins.rachasRotas.length>0) ? `<div class="medallion-row">
+        ${ins.murallas.map(e=>`<div class="medallion"><span class="medal-icon">🧱</span>${escapeHtml(e.nombre)} — muralla</div>`).join('')}
+        ${ins.rachasRotas.map(r2=>`<div class="medallion"><span class="medal-icon">💔</span>${escapeHtml(r2.nombre)} — racha rota</div>`).join('')}
+      </div>` : ''}
+      <div class="modal-actions">
+        <a class="whatsapp-btn" id="btn-compartir-whatsapp" target="_blank" rel="noopener">📲 Compartir por WhatsApp</a>
+        <button class="btn btn-gold" id="btn-modal-cerrar-resumen">Cerrar</button>
+      </div>
+    </div>`;
+  } else if(modal.type === 'rename-jugador'){
+    wrap.innerHTML = `<div class="modal-box">
+      <div class="modal-title">Editar nombre</div>
+      <div class="modal-txt">Cambia el nombre de "${escapeHtml(modal.oldName)}". Todas sus estadísticas, goles y jornadas pasadas se conservan bajo el nuevo nombre.</div>
+      <input type="text" class="txt-input" id="input-rename" value="${escapeHtml(modal.oldName)}" autofocus>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="btn-modal-cancel">Cancelar</button>
+        <button class="btn btn-gold" id="btn-modal-rename-confirm">Guardar</button>
+      </div>
     </div>`;
   }
 
@@ -1372,6 +1754,10 @@ function renderModal(){
   if(confirmBtn) confirmBtn.onclick = () => { if(modal && modal.onConfirm) modal.onConfirm(); };
   const cerrarResumenBtn = document.getElementById('btn-modal-cerrar-resumen');
   if(cerrarResumenBtn) cerrarResumenBtn.onclick = () => { modal = null; render(); };
+  const waBtn = document.getElementById('btn-compartir-whatsapp');
+  if(waBtn && modal && modal.type === 'resumen-jornada'){
+    waBtn.href = 'https://wa.me/?text=' + encodeURIComponent(textoCompartirResumen(modal.jornada, modal.resumen));
+  }
   wrap.querySelectorAll('[data-resultado]').forEach(el=>{
     el.onclick = () => resolverPartido(el.getAttribute('data-resultado'));
   });
@@ -1384,6 +1770,13 @@ function renderModal(){
   wrap.querySelectorAll('[data-resultado-penales]').forEach(el=>{
     el.onclick = () => resolverPenales(el.getAttribute('data-resultado-penales'));
   });
+  const renameInput = document.getElementById('input-rename');
+  const renameConfirmBtn = document.getElementById('btn-modal-rename-confirm');
+  if(renameInput && renameConfirmBtn){
+    const doRename = () => { renombrarJugador(modal.oldName, renameInput.value); modal = null; render(); };
+    renameConfirmBtn.onclick = doRename;
+    renameInput.addEventListener('keydown', e => { if(e.key==='Enter') doRename(); });
+  }
 }
 
 /* ---------- Event delegation ---------- */
@@ -1477,6 +1870,14 @@ function attachHandlers(){
   app.querySelectorAll('[data-remove-habitual]').forEach(el=>{
     el.onclick = () => removeJugadorFrecuente(el.getAttribute('data-remove-habitual'));
   });
+  app.querySelectorAll('[data-rename-habitual]').forEach(el=>{
+    el.onclick = () => { modal = { type:'rename-jugador', oldName: el.getAttribute('data-rename-habitual') }; render(); };
+  });
+  app.querySelectorAll('[data-open-ficha]').forEach(el=>{
+    el.onclick = () => abrirFichaJugador(el.getAttribute('data-open-ficha'));
+  });
+  const btnVolverFicha = document.getElementById('btn-volver-ficha');
+  if(btnVolverFicha) btnVolverFicha.onclick = () => { activeTab = fichaOrigenTab; render(); };
 
   const btnLogoutAdmin = document.getElementById('btn-logout-admin');
   if(btnLogoutAdmin) btnLogoutAdmin.onclick = logoutAdmin;
