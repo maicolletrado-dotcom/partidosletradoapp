@@ -342,6 +342,47 @@ body{
 .whatsapp-btn:hover{filter:brightness(1.05);}
 
 .badge-jornada-note{font-size:12px;color:var(--gold);margin-top:6px;}
+
+.periodo-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--line);}
+.periodo-row .txt-input{flex:0 0 auto;width:auto;min-width:160px;}
+.periodo-row .eyebrow{margin:0;}
+
+.cmp-selects{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.cmp-selects .txt-input{flex:1;min-width:0;}
+.cmp-vs{font-family:'Bebas Neue';font-size:20px;color:var(--gold);}
+.cmp-table{border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+.cmp-row{display:grid;grid-template-columns:1fr 1.6fr 1fr;align-items:center;padding:10px 12px;border-bottom:1px dashed var(--line);font-size:13px;}
+.cmp-row:last-child{border-bottom:none;}
+.cmp-lbl{text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--ink-dimmer);}
+.cmp-val{font-family:'Bebas Neue';font-size:22px;color:var(--ink-dim);}
+.cmp-val:last-child{text-align:right;}
+.cmp-val.cmp-win{color:var(--gold);}
+
+/* ---------- Modo TV ---------- */
+.tv-wrap{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 18px 40px;text-align:center;}
+.tv-controls{position:fixed;top:12px;right:12px;display:flex;gap:8px;z-index:6;opacity:0.45;transition:.2s;}
+.tv-controls:hover{opacity:1;}
+.tv-brand{position:fixed;top:14px;left:18px;font-family:'Bebas Neue';font-size:22px;letter-spacing:1px;color:var(--ink-dim);}
+.tv-brand span{color:var(--gold);}
+.tv-status{font-family:'JetBrains Mono';letter-spacing:4px;color:var(--ink-dimmer);font-size:clamp(12px,2vw,22px);text-transform:uppercase;margin-bottom:2.5vh;}
+.tv-status .live-chip{color:var(--red-card);font-weight:700;}
+.tv-status .live-chip::before{content:'● ';animation:blink 1.4s infinite;}
+.tv-row{display:flex;align-items:center;justify-content:center;gap:2vw;width:100%;max-width:1500px;}
+.tv-team{flex:1;min-width:0;font-family:'Bebas Neue';font-size:clamp(26px,6.5vw,104px);line-height:1;}
+.tv-team > div:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tv-bar{height:1.1vh;min-height:6px;border-radius:6px;margin-top:1.4vh;}
+.tv-score{font-family:'Bebas Neue';font-size:clamp(90px,24vw,400px);line-height:0.9;color:var(--gold);text-shadow:0 0 60px var(--gold-glow);min-width:0.7em;}
+.tv-sep{font-family:'Bebas Neue';font-size:clamp(48px,10vw,160px);color:var(--ink-dimmer);}
+.tv-clock{font-family:'JetBrains Mono';font-size:clamp(34px,8vw,120px);letter-spacing:4px;margin-top:2vh;}
+.tv-sub{font-size:clamp(13px,2vw,28px);color:var(--ink-dim);margin-top:1vh;}
+.tv-next{font-family:'Bebas Neue';font-size:clamp(34px,7vw,100px);color:var(--gold);margin-bottom:2vh;}
+.tv-tabla{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:3.5vh;}
+.tv-tabla-item{background:var(--bg-panel);border:1px solid var(--line-strong);border-radius:14px;padding:1.2vh 2vw;font-size:clamp(14px,2.2vw,32px);display:flex;align-items:center;gap:10px;}
+.tv-tabla-item b{font-family:'Bebas Neue';font-size:1.6em;color:var(--gold);margin-left:6px;}
+.tv-goles{margin-top:3vh;font-size:clamp(14px,2.2vw,30px);color:var(--ink-dim);line-height:1.6;}
+.tv-goles b{color:var(--ink);}
+.tv-banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(18,20,28,0.88);font-family:'Bebas Neue';font-size:clamp(46px,12vw,200px);color:var(--gold);z-index:5;padding:20px;animation:tvpop .45s ease-out;text-shadow:0 0 60px var(--gold-glow);}
+@keyframes tvpop{from{opacity:0;transform:scale(0.92);}to{opacity:1;transform:scale(1);}}
 </style>
 </head>
 <body>
@@ -424,6 +465,26 @@ let draft = {
 
 /* ---------- Utilidades ---------- */
 function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+/* Normaliza un nombre para comparar: sin tildes, minúsculas, espacios colapsados */
+function normNombre(s){
+  return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+}
+/* Devuelve el nombre "oficial": si ya existe un jugador equivalente (mismo nombre salvo
+   mayúsculas/tildes/espacios) usa ese; si no, el texto limpio que escribió el usuario. */
+function canonName(raw){
+  const limpio = String(raw||'').replace(/\s+/g,' ').trim();
+  if(!limpio) return '';
+  const n = normNombre(limpio);
+  const existente = (state.jugadoresFrecuentes||[]).find(x => normNombre(x) === n);
+  if(existente) return existente;
+  for(const j of (state.jornadas||[])){
+    for(const e of j.equipos){
+      const hit = e.jugadores.find(x => normNombre(x) === n);
+      if(hit) return hit;
+    }
+  }
+  return limpio;
+}
 function escapeHtml(s){
   return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
@@ -452,6 +513,34 @@ function getPartidoActual(j){
 function nextJornadaNumber(){
   if(state.jornadas.length === 0) return 1;
   return Math.max(...state.jornadas.map(j => j.numero||0)) + 1;
+}
+
+/* ---------- Fechas y filtro por periodo ---------- */
+function fechaLocal(d){
+  d = d || new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+let periodoFiltro = 'todo';
+function jornadasEnPeriodo(){
+  if(periodoFiltro === 'todo') return state.jornadas;
+  const hoy = fechaLocal();
+  let desde = null, hasta = null;
+  if(periodoFiltro === 'mes') desde = hoy.slice(0,7)+'-01';
+  else if(periodoFiltro === '3m'){ const d = new Date(); d.setDate(d.getDate()-90); desde = fechaLocal(d); }
+  else if(periodoFiltro === 'anio') desde = hoy.slice(0,4)+'-01-01';
+  else if(periodoFiltro.startsWith('y:')){ const y = periodoFiltro.slice(2); desde = y+'-01-01'; hasta = y+'-12-31'; }
+  return state.jornadas.filter(j => (!desde || (j.fecha||'') >= desde) && (!hasta || (j.fecha||'') <= hasta));
+}
+function renderSelectorPeriodo(){
+  const anioActual = fechaLocal().slice(0,4);
+  const years = [...new Set(state.jornadas.map(j => (j.fecha||'').slice(0,4)).filter(y => y && y !== anioActual))].sort().reverse();
+  const opts = [['todo','Todo el tiempo'],['mes','Este mes'],['3m','Últimos 3 meses'],['anio','Este año'], ...years.map(y=>['y:'+y,'Año '+y])];
+  const n = jornadasEnPeriodo().filter(j=>j.estado==='finalizado').length;
+  return `<div class="periodo-row">
+    <span class="eyebrow">Periodo</span>
+    <select class="txt-input" id="sel-periodo">${opts.map(([v,l])=>`<option value="${v}" ${periodoFiltro===v?'selected':''}>${l}</option>`).join('')}</select>
+    <span class="hint" style="margin:0;">${n} jornada(s) jugada(s)</span>
+  </div>`;
 }
 
 /* ---------- Persistencia (Firebase Realtime Database) ---------- */
@@ -555,9 +644,9 @@ async function saveState(){
 /* ---------- Jugadores habituales (plantilla) ---------- */
 let nuevoJugadorHabitualInput = '';
 function addJugadorFrecuente(name){
-  const n = (name||'').trim();
+  const n = canonName(name);
   if(!n) return;
-  if(state.jugadoresFrecuentes.some(x => x.toLowerCase() === n.toLowerCase())) return;
+  if(state.jugadoresFrecuentes.some(x => normNombre(x) === normNombre(n))) return;
   state.jugadoresFrecuentes.push(n);
   saveState();
 }
@@ -598,9 +687,9 @@ function setDraftNumEquipos(n){ draft.numEquipos = n; render(); }
 function setDraftField(idx, field, value){ draft.equipos[idx][field] = value; render(); }
 function setDraftColor(idx, color){ draft.equipos[idx].color = color; render(); }
 function addDraftPlayer(idx){
-  const name = (draft.addPlayerInput[idx]||'').trim();
+  const name = canonName(draft.addPlayerInput[idx]);
   if(!name) return;
-  const yaAsignado = draft.equipos.some(eq => eq.jugadores.includes(name));
+  const yaAsignado = draft.equipos.some(eq => eq.jugadores.some(x => normNombre(x) === normNombre(name)));
   if(yaAsignado){ showToast(name+' ya está en un equipo de esta jornada'); return; }
   draft.equipos[idx].jugadores.push(name);
   draft.addPlayerInput[idx] = '';
@@ -641,7 +730,7 @@ function crearYIniciarJornada(){
   const j = {
     id: uid(),
     numero: nextJornadaNumber(),
-    fecha: new Date().toISOString().slice(0,10),
+    fecha: fechaLocal(),
     estado: 'en_vivo',
     limiteGoles: parseInt(draft.limiteGoles,10) || 2,
     limiteTiempoMin: draft.limiteTiempoMin ? parseInt(draft.limiteTiempoMin,10) : null,
@@ -669,6 +758,8 @@ function crearPartido(j, izqId, derId, esperaId){
   j.partidos.push({
     id: uid(), numero: j.partidos.length+1,
     equipoIzqId: izqId, equipoDerId: derId, equipoEsperaId: esperaId || null,
+    jugadoresIzq: [...(getEquipo(j, izqId)?.jugadores || [])],
+    jugadoresDer: [...(getEquipo(j, derId)?.jugadores || [])],
     goles: [], tarjetas: [],
     timer: { running:true, startedAt: Date.now(), accumulatedSeconds:0 },
     estado: 'en_vivo', resultado: null
@@ -798,6 +889,290 @@ function resolverQuienSale(saleId){
   j.proximoPartido = { izqId: quedan[0], derId: quedan[1], esperaId: saleId };
   saveState(); render();
 }
+/* ---------- Respaldo: Excel (.xlsx) y JSON ---------- */
+const _crcTable = (()=>{ const t=[]; for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
+function crc32(bytes){ let c=0xFFFFFFFF; for(let i=0;i<bytes.length;i++) c=_crcTable[(c^bytes[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipStore(files){
+  const enc = new TextEncoder(), chunks = [], central = []; let offset = 0;
+  const u16 = n => [n&255,(n>>>8)&255], u32 = n => [n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255];
+  const dosDate = ((2026-1980)<<9)|(1<<5)|1;
+  files.forEach(f=>{
+    const nameBytes = enc.encode(f.name), crc = crc32(f.data);
+    const local = new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(dosDate),...u32(crc),...u32(f.data.length),...u32(f.data.length),...u16(nameBytes.length),...u16(0)]);
+    chunks.push(local, nameBytes, f.data);
+    central.push({ nameBytes, crc, size:f.data.length, offset });
+    offset += local.length + nameBytes.length + f.data.length;
+  });
+  const cdStart = offset;
+  central.forEach(c=>{
+    const h = new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(dosDate),...u32(c.crc),...u32(c.size),...u32(c.size),...u16(c.nameBytes.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(c.offset)]);
+    chunks.push(h, c.nameBytes); offset += h.length + c.nameBytes.length;
+  });
+  const cdSize = offset - cdStart;
+  chunks.push(new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(central.length),...u16(central.length),...u32(cdSize),...u32(cdStart),...u16(0)]));
+  return new Blob(chunks);
+}
+function colLetra(i){ let s=''; i++; while(i>0){ const m=(i-1)%26; s=String.fromCharCode(65+m)+s; i=Math.floor((i-1)/26); } return s; }
+function xmlEsc(v){ return String(v).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function hojaXml(filas){
+  const anchos = [];
+  filas.forEach(f=>f.forEach((v,i)=>{ const l = String(v ?? '').length; anchos[i] = Math.min(45, Math.max(anchos[i]||8, l+2)); }));
+  const cols = anchos.length ? '<cols>'+anchos.map((w,i)=>`<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>`).join('')+'</cols>' : '';
+  const rows = filas.map((f,r)=>`<row r="${r+1}">`+f.map((v,c)=>{
+    const ref = colLetra(c)+(r+1), st = r===0 ? ' s="1"' : '';
+    if(typeof v === 'number' && isFinite(v)) return `<c r="${ref}"${st}><v>${v}</v></c>`;
+    if(v === null || v === undefined || v === '') return `<c r="${ref}"${st}/>`;
+    return `<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+  }).join('')+'</row>').join('');
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>${cols}<sheetData>${rows}</sheetData></worksheet>`;
+}
+function construirXlsx(hojas){
+  const enc = new TextEncoder(), X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+  const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const files = [
+    { name:'[Content_Types].xml', data: enc.encode(X+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+hojas.map((h,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')+'<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>') },
+    { name:'_rels/.rels', data: enc.encode(X+`<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="${R}/officeDocument" Target="xl/workbook.xml"/></Relationships>`) },
+    { name:'xl/workbook.xml', data: enc.encode(X+`<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="${R}"><sheets>`+hojas.map((h,i)=>`<sheet name="${xmlEsc(h.nombre)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')+'</sheets></workbook>') },
+    { name:'xl/_rels/workbook.xml.rels', data: enc.encode(X+'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+hojas.map((h,i)=>`<Relationship Id="rId${i+1}" Type="${R}/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')+`<Relationship Id="rId${hojas.length+1}" Type="${R}/styles" Target="styles.xml"/></Relationships>`) },
+    { name:'xl/styles.xml', data: enc.encode(X+'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFE8A33D"/><bgColor indexed="64"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>') }
+  ];
+  hojas.forEach((h,i)=>files.push({ name:`xl/worksheets/sheet${i+1}.xml`, data: enc.encode(hojaXml(h.filas)) }));
+  return zipStore(files);
+}
+function hojasDeRespaldo(){
+  const nombreEq = (j,id) => (getEquipo(j,id)||{nombre:'?'}).nombre;
+  const jug = [['Jugador','Goles','Asistencias','Jornadas jugadas','Partidos jugados','Partidos ganados','% victorias','Goles por jornada','Amarillas','Rojas','Mejor racha V','Racha actual','Botas de oro']];
+  allTimeStats().forEach(x=>jug.push([x.nombre,x.goles,x.asistencias,x.jornadasJugadas,x.partidosJugados,x.partidosGanados, x.partidosJugados?Math.round(x.partidosGanados/x.partidosJugados*1000)/10:0, Math.round(x.promedio*100)/100, x.amarillas,x.rojas,x.mejorRachaV, x.rachaTipo?x.rachaCantidad+x.rachaTipo:'', x.botasDeOro]));
+  const jor = [['Jornada','Fecha','Estado','Equipos (jugadores)','Partidos ganados por equipo','Ganador(es)','Partidos','Goles','Duración total']];
+  const par = [['Jornada','Fecha','Partido','Equipo izquierdo','Equipo derecho','Goles izq.','Goles der.','Ganador','Por penales','Duración','Jugadores izq.','Jugadores der.']];
+  const gol = [['Jornada','Fecha','Partido','Minuto','Jugador','Equipo','Asistencia']];
+  const tar = [['Jornada','Fecha','Partido','Minuto','Jugador','Equipo','Tarjeta']];
+  state.jornadas.slice().sort((a,b)=>a.numero-b.numero).forEach(j=>{
+    const r = jornadaResumen(j), { conteo, ganadores, empateTotal } = ganadoresJornada(j);
+    jor.push([j.numero,j.fecha,j.estado, j.equipos.map(e=>e.nombre+': '+e.jugadores.join(', ')).join(' | '), j.equipos.map(e=>e.nombre+' '+(conteo[e.id]||0)).join(' · '), j.estado==='finalizado'?(empateTotal?'Empate':ganadores.map(g=>g.nombre).join(' y ')):'(en curso)', r.totalPartidos, r.totalGoles, fmtClock(r.duracionTotal)]);
+    j.partidos.forEach(p=>{
+      const gI = p.goles.filter(g=>g.equipoId===p.equipoIzqId).length, gD = p.goles.filter(g=>g.equipoId===p.equipoDerId).length;
+      const gan = p.resultado==='IZQ' ? nombreEq(j,p.equipoIzqId) : (p.resultado==='DER' ? nombreEq(j,p.equipoDerId) : (p.resultado==='EMPATE'?'Empate':'(sin resultado)'));
+      par.push([j.numero,j.fecha,p.numero,nombreEq(j,p.equipoIzqId),nombreEq(j,p.equipoDerId),gI,gD,gan,p.definidoPorPenales?'Sí':'', fmtClock(elapsedSeconds(p.timer)), jugadoresDePartido(j,p,'IZQ').join(', '), jugadoresDePartido(j,p,'DER').join(', ')]);
+      p.goles.slice().sort((a,b)=>a.minuto-b.minuto).forEach(g=>gol.push([j.numero,j.fecha,p.numero,g.minuto,g.jugador,nombreEq(j,g.equipoId),g.asistencia||'']));
+      p.tarjetas.forEach(c=>tar.push([j.numero,j.fecha,p.numero,c.minuto,c.jugador,nombreEq(j,c.equipoId),c.tipo==='amarilla'?'Amarilla':'Roja']));
+    });
+  });
+  return [ {nombre:'Jugadores',filas:jug}, {nombre:'Jornadas',filas:jor}, {nombre:'Partidos',filas:par}, {nombre:'Goles',filas:gol}, {nombre:'Tarjetas',filas:tar} ];
+}
+function descargarBlob(nombre, blob){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+function exportarExcel(){
+  try{
+    const blob = construirXlsx(hojasDeRespaldo());
+    descargarBlob('partidos-letrado-'+fechaLocal()+'.xlsx', new Blob([blob], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+    showToast('Excel descargado');
+  }catch(e){ console.error(e); showToast('No se pudo generar el Excel'); }
+}
+function exportarJSON(){
+  const data = { app:'partidos-letrado', version:1, exportado:new Date().toISOString(), state };
+  descargarBlob('partidos-letrado-respaldo-'+fechaLocal()+'.json', new Blob([JSON.stringify(data,null,1)], {type:'application/json'}));
+  showToast('Respaldo descargado');
+}
+function restaurarDesdeArchivo(file){
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(reader.result);
+      const cand = parsed && parsed.state ? parsed.state : parsed;
+      if(!cand || (!Array.isArray(cand.jornadas) && !Array.isArray(cand.jugadoresFrecuentes))) throw new Error('formato');
+      const nuevo = normalizeState(cand);
+      modal = { type:'confirm', title:'¿Restaurar este respaldo?',
+        text:'Se reemplazarán TODOS los datos actuales por los del archivo ('+nuevo.jornadas.length+' jornada(s), '+nuevo.jugadoresFrecuentes.length+' jugador(es) habituales). Haz primero un respaldo de lo actual si no estás seguro.',
+        onConfirm: () => { state = nuevo; modal = null; saveState(); render(); showToast('Respaldo restaurado'); } };
+      render();
+    }catch(e){ showToast('El archivo no parece un respaldo válido'); }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- Corregir un partido ya cerrado ---------- */
+function ubicarPartido(jId, pId){
+  const j = state.jornadas.find(x=>x.id===jId);
+  const p = j && j.partidos.find(x=>x.id===pId);
+  return { j, p };
+}
+function abrirEditarPartido(jId, pId){
+  modal = { type:'editar-partido', jornadaId:jId, partidoId:pId, golJugador:'', golAsist:'', golMinuto:'', cardJugador:'', cardTipo:'amarilla' };
+  render();
+}
+function corregirResultado(res){
+  const { p } = ubicarPartido(modal.jornadaId, modal.partidoId); if(!p) return;
+  p.resultado = res;
+  if(res === 'EMPATE') p.definidoPorPenales = false;
+  saveState(); render();
+}
+function corregirPenales(){
+  const { p } = ubicarPartido(modal.jornadaId, modal.partidoId); if(!p) return;
+  if(p.resultado !== 'IZQ' && p.resultado !== 'DER'){ showToast('Primero elige el ganador'); return; }
+  p.definidoPorPenales = !p.definidoPorPenales;
+  saveState(); render();
+}
+function agregarGolManual(){
+  const { p } = ubicarPartido(modal.jornadaId, modal.partidoId); if(!p) return;
+  if(!modal.golJugador){ showToast('Elige quién anotó'); return; }
+  const k = modal.golJugador.indexOf('|');
+  const equipoId = modal.golJugador.slice(0,k), jugador = modal.golJugador.slice(k+1);
+  const min = parseInt(modal.golMinuto,10);
+  p.goles.push({ id: uid(), equipoId, jugador, asistencia: modal.golAsist || null, minuto: isNaN(min)?0:Math.max(0,min), ts: Date.now() });
+  modal.golJugador = ''; modal.golAsist = ''; modal.golMinuto = '';
+  saveState(); render();
+}
+function borrarGolManual(id){
+  const { p } = ubicarPartido(modal.jornadaId, modal.partidoId); if(!p) return;
+  p.goles = p.goles.filter(g=>g.id!==id); saveState(); render();
+}
+function agregarTarjetaManual(){
+  const { j, p } = ubicarPartido(modal.jornadaId, modal.partidoId); if(!p) return;
+  if(!modal.cardJugador){ showToast('Elige a quién se le mostró'); return; }
+  const k = modal.cardJugador.indexOf('|');
+  p.tarjetas.push({ id: uid(), equipoId: modal.cardJugador.slice(0,k), jugador: modal.cardJugador.slice(k+1), tipo: modal.cardTipo || 'amarilla', minuto: 0 });
+  modal.cardJugador = '';
+  saveState(); render();
+}
+function borrarTarjetaManual(id){
+  const { p } = ubicarPartido(modal.jornadaId, modal.partidoId); if(!p) return;
+  p.tarjetas = p.tarjetas.filter(c=>c.id!==id); saveState(); render();
+}
+function htmlEditarPartido(){
+  const { j, p } = ubicarPartido(modal.jornadaId, modal.partidoId);
+  if(!p) return `<div class="modal-box"><div class="modal-title">Partido no encontrado</div><div class="modal-actions"><button class="btn btn-outline" id="btn-modal-cancel">Cerrar</button></div></div>`;
+  const eqI = getEquipo(j,p.equipoIzqId), eqD = getEquipo(j,p.equipoDerId);
+  const lineI = jugadoresDePartido(j,p,'IZQ'), lineD = jugadoresDePartido(j,p,'DER');
+  const gI = p.goles.filter(g=>g.equipoId===p.equipoIzqId).length, gD = p.goles.filter(g=>g.equipoId===p.equipoDerId).length;
+  const nombreEq = id => (getEquipo(j,id)||{nombre:'?'}).nombre;
+  const optJug = sel => `<option value="">Elegir…</option>` +
+    [[p.equipoIzqId,eqI,lineI],[p.equipoDerId,eqD,lineD]].map(([id,eq,line])=>
+      `<optgroup label="${escapeHtml(eq.nombre)}">${line.map(n=>`<option value="${id}|${escapeHtml(n)}" ${sel===id+'|'+n?'selected':''}>${escapeHtml(n)}</option>`).join('')}</optgroup>`).join('');
+  // asistentes: compañeros del goleador
+  let optAs = '<option value="">Sin asistencia</option>';
+  if(modal.golJugador){
+    const k = modal.golJugador.indexOf('|'); const eid = modal.golJugador.slice(0,k), quien = modal.golJugador.slice(k+1);
+    const line = eid === p.equipoIzqId ? lineI : lineD;
+    optAs += line.filter(n=>n!==quien).map(n=>`<option value="${escapeHtml(n)}" ${modal.golAsist===n?'selected':''}>${escapeHtml(n)}</option>`).join('');
+  }
+  const res = p.resultado;
+  const hayDesajuste = (res==='IZQ' && gD>gI && !p.definidoPorPenales) || (res==='DER' && gI>gD && !p.definidoPorPenales);
+  const btnRes = (v,lbl) => `<button class="btn ${res===v?'btn-gold':'btn-outline'} btn-sm" data-fix-res="${v}">${lbl}</button>`;
+  return `<div class="modal-box" style="max-width:460px;">
+    <div class="modal-title">✏️ Corregir — Jornada ${j.numero}, partido ${p.numero}</div>
+    <div class="modal-txt" style="margin-bottom:8px;"><b>${escapeHtml(eqI.nombre)}</b> ${gI} – ${gD} <b>${escapeHtml(eqD.nombre)}</b> <span style="color:var(--ink-dimmer)">(según los goles registrados)</span></div>
+
+    <span class="eyebrow">Resultado del partido</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px;">
+      ${btnRes('IZQ','Ganó '+escapeHtml(eqI.nombre))}${btnRes('DER','Ganó '+escapeHtml(eqD.nombre))}${btnRes('EMPATE','Empate')}
+    </div>
+    <div style="margin-bottom:6px;"><button class="btn ${p.definidoPorPenales?'btn-gold':'btn-outline'} btn-sm" id="fix-penales">🥅 Definido por penales: ${p.definidoPorPenales?'Sí':'No'}</button></div>
+    ${!res ? '<div class="hint" style="color:var(--red-card);">Este partido no tiene resultado: elige uno para que cuente.</div>' : ''}
+    ${hayDesajuste ? '<div class="hint" style="color:var(--gold);">El ganador elegido no coincide con los goles. Si fue por penales, actívalo; si no, revisa el resultado o los goles.</div>' : ''}
+
+    <span class="eyebrow" style="display:block;margin-top:14px;">Goles (${p.goles.length})</span>
+    <div class="event-log" style="max-height:150px;">
+      ${p.goles.length===0 ? '<div class="hint">Sin goles.</div>' : p.goles.slice().sort((a,b)=>(a.minuto-b.minuto)).map(g=>`<div class="event-row"><span class="event-min">${g.minuto}'</span><span class="event-tag">⚽</span><span class="event-txt"><b>${escapeHtml(g.jugador)}</b> (${escapeHtml(nombreEq(g.equipoId))})${g.asistencia?' · asist. '+escapeHtml(g.asistencia):''}</span><button class="icon-btn remove" data-fix-del-gol="${g.id}">✕</button></div>`).join('')}
+    </div>
+    <div class="add-player-row" style="flex-wrap:wrap;">
+      <select class="txt-input" id="fix-gol-jugador" style="flex:2;min-width:120px;">${optJug(modal.golJugador)}</select>
+      <select class="txt-input" id="fix-gol-asist" style="flex:2;min-width:110px;">${optAs}</select>
+      <input class="txt-input" id="fix-gol-min" type="number" min="0" placeholder="Min" value="${escapeHtml(modal.golMinuto)}" style="flex:1;min-width:60px;">
+      <button class="btn btn-gold btn-sm" id="btn-fix-add-gol">+ Gol</button>
+    </div>
+
+    <span class="eyebrow" style="display:block;margin-top:14px;">Tarjetas (${p.tarjetas.length})</span>
+    <div class="event-log" style="max-height:110px;">
+      ${p.tarjetas.length===0 ? '<div class="hint">Sin tarjetas.</div>' : p.tarjetas.map(c=>`<div class="event-row"><span class="event-tag">${c.tipo==='amarilla'?'🟨':'🟥'}</span><span class="event-txt"><b>${escapeHtml(c.jugador)}</b> (${escapeHtml(nombreEq(c.equipoId))})</span><button class="icon-btn remove" data-fix-del-card="${c.id}">✕</button></div>`).join('')}
+    </div>
+    <div class="add-player-row" style="flex-wrap:wrap;">
+      <select class="txt-input" id="fix-card-jugador" style="flex:2;min-width:120px;">${optJug(modal.cardJugador)}</select>
+      <select class="txt-input" id="fix-card-tipo" style="flex:1;min-width:90px;"><option value="amarilla" ${modal.cardTipo!=='roja'?'selected':''}>🟨 Amarilla</option><option value="roja" ${modal.cardTipo==='roja'?'selected':''}>🟥 Roja</option></select>
+      <button class="btn btn-gold btn-sm" id="btn-fix-add-card">+ Tarjeta</button>
+    </div>
+
+    <div class="modal-actions"><button class="btn btn-gold" id="btn-modal-cancel">Listo</button></div>
+  </div>`;
+}
+
+/* ---------- Revisión de datos ---------- */
+let auditCache = [];
+function auditarDatos(){
+  const issues = [];
+  // 1) nombres duplicados (mismo nombre salvo mayúsculas/tildes/espacios)
+  const uso = {}; // nombre -> usos
+  const sumar = n => { if(n) uso[n] = (uso[n]||0)+1; };
+  state.jugadoresFrecuentes.forEach(n => { uso[n] = (uso[n]||0); });
+  state.jornadas.forEach(j=>{
+    j.equipos.forEach(e=>e.jugadores.forEach(sumar));
+    j.partidos.forEach(p=>{ p.goles.forEach(g=>{ sumar(g.jugador); sumar(g.asistencia); }); p.tarjetas.forEach(c=>sumar(c.jugador)); });
+  });
+  const grupos = {};
+  Object.keys(uso).forEach(n => { const k = normNombre(n); (grupos[k] = grupos[k] || []).push(n); });
+  Object.values(grupos).filter(g=>g.length>1).forEach(g=>{
+    const enLista = g.find(n => state.jugadoresFrecuentes.includes(n));
+    const destino = enLista || g.slice().sort((a,b)=>uso[b]-uso[a])[0];
+    issues.push({ tipo:'duplicado', nombres:g, destino, texto:'Parecen la misma persona: '+g.map(n=>'«'+n+'»').join(', ') });
+  });
+  // 2) jornadas finalizadas sin ningún gol (posible prueba)
+  state.jornadas.filter(j=>j.estado==='finalizado').forEach(j=>{
+    const goles = j.partidos.reduce((a,p)=>a+p.goles.length,0);
+    if(goles === 0) issues.push({ tipo:'sin_goles', jornadaId:j.id, texto:'La jornada #'+j.numero+' ('+j.fecha+') no tiene ningún gol registrado — ¿fue de prueba?' });
+  });
+  // 3) jornadas abandonadas (no finalizadas y que ya no son la actual)
+  state.jornadas.filter(j=>j.estado!=='finalizado' && j.id!==state.currentJornadaId).forEach(j=>{
+    issues.push({ tipo:'abandonada', jornadaId:j.id, texto:'La jornada #'+j.numero+' ('+j.fecha+') quedó sin cerrar y no está activa.' });
+  });
+  // 4) partidos finalizados sin resultado
+  state.jornadas.forEach(j=>j.partidos.forEach(p=>{
+    if(p.estado==='finalizado' && !p.resultado) issues.push({ tipo:'sin_resultado', jornadaId:j.id, partidoId:p.id, texto:'Jornada #'+j.numero+', partido '+p.numero+': terminó sin resultado registrado (no cuenta como ganado para nadie).' });
+  }));
+  // 5) goles de alguien que no estaba en la alineación de ese partido
+  state.jornadas.forEach(j=>j.partidos.forEach(p=>{
+    const en = new Set([...jugadoresDePartido(j,p,'IZQ'), ...jugadoresDePartido(j,p,'DER')]);
+    const raros = [...new Set(p.goles.filter(g=>!en.has(g.jugador)).map(g=>g.jugador))];
+    if(raros.length) issues.push({ tipo:'gol_fuera', jornadaId:j.id, partidoId:p.id, texto:'Jornada #'+j.numero+', partido '+p.numero+': hay goles de '+raros.map(n=>'«'+n+'»').join(', ')+' que no figura(n) en la alineación.' });
+  }));
+  return issues;
+}
+function eliminarJornada(id){
+  const j = state.jornadas.find(x=>x.id===id); if(!j) return;
+  modal = { type:'confirm', title:'¿Eliminar la jornada #'+j.numero+'?', text:'Se borra por completo del historial y sus goles dejan de contar en todas las estadísticas. No se puede deshacer.',
+    onConfirm: () => {
+      state.jornadas = state.jornadas.filter(x=>x.id!==id);
+      if(state.currentJornadaId === id) state.currentJornadaId = null;
+      modal = null; saveState(); render();
+    } };
+  render();
+}
+
+/* ---------- Agregar jugadores cuando la jornada ya avanzó ---------- */
+let liveAddNombre = '';
+function agregarJugadorEnVivo(equipoId, rawName){
+  const j = getCurrentJornada(); if(!j) return;
+  const name = canonName(rawName);
+  if(!name){ showToast('Escribe o elige un jugador'); return; }
+  const eq = getEquipo(j, equipoId); if(!eq){ showToast('Elige a qué equipo se une'); return; }
+  const yaEn = j.equipos.find(e => e.jugadores.some(x => normNombre(x) === normNombre(name)));
+  if(yaEn){ showToast(name+' ya está en '+yaEn.nombre); return; }
+  eq.jugadores.push(name);
+  // si su equipo está jugando ahora, entra al partido en curso (solo desde este momento)
+  const p = getPartidoActual(j);
+  if(p){
+    if(p.equipoIzqId === equipoId){ p.jugadoresIzq = [...(p.jugadoresIzq||[]), name]; }
+    else if(p.equipoDerId === equipoId){ p.jugadoresDer = [...(p.jugadoresDer||[]), name]; }
+  }
+  addJugadorFrecuente(name);
+  liveAddNombre = '';
+  saveState(); render();
+  showToast(name+' se unió a '+eq.nombre);
+}
+
 function iniciarSiguientePartido(){
   const j = getCurrentJornada(); if(!j || !j.proximoPartido) return;
   const { izqId, derId, esperaId } = j.proximoPartido;
@@ -877,9 +1252,16 @@ function jornadaResumen(j){
 
 /* ---------- Estadísticas globales (por jugador) ---------- */
 function jugadorEnEquipo(j, equipo, nombre){ return equipo.jugadores.includes(nombre); }
+/* Quiénes jugaron realmente un partido (alineación guardada; datos antiguos usan el roster) */
+function jugadoresDePartido(j, p, lado){
+  const snap = lado === 'IZQ' ? p.jugadoresIzq : p.jugadoresDer;
+  if(Array.isArray(snap)) return snap;
+  const eq = getEquipo(j, lado === 'IZQ' ? p.equipoIzqId : p.equipoDerId);
+  return eq ? eq.jugadores : [];
+}
 
-function playerResultSequenceDetailed(name){
-  const finalizadas = state.jornadas.filter(j => j.estado === 'finalizado').sort((a,b)=>a.numero-b.numero);
+function playerResultSequenceDetailed(name, src){
+  const finalizadas = (src || state.jornadas).filter(j => j.estado === 'finalizado').slice().sort((a,b)=>a.numero-b.numero);
   const seq = [];
   finalizadas.forEach(j => {
     const equipoJugador = j.equipos.find(e => e.jugadores.includes(name));
@@ -893,7 +1275,7 @@ function playerResultSequenceDetailed(name){
   });
   return seq;
 }
-function playerResultSequence(name){ return playerResultSequenceDetailed(name).map(x=>x.resultado); }
+function playerResultSequence(name, src){ return playerResultSequenceDetailed(name, src).map(x=>x.resultado); }
 function computeStreaks(seq){
   if(seq.length === 0) return { rachaTipo:null, rachaCantidad:0, mejorRachaV:0 };
   const ultimo = seq[seq.length-1];
@@ -903,24 +1285,26 @@ function computeStreaks(seq){
   seq.forEach(r => { if(r==='V'){ actual++; mejorRachaV = Math.max(mejorRachaV, actual); } else actual = 0; });
   return { rachaTipo: ultimo, rachaCantidad, mejorRachaV };
 }
-function allTimeStats(){
+function allTimeStats(src){
+  const jornadasSrc = src || state.jornadas;
   const map = {};
   function ensure(name){
     if(!map[name]) map[name] = { nombre:name, goles:0, asistencias:0, amarillas:0, rojas:0, jornadasJugadas:new Set(), partidosJugados:0, partidosGanados:0, botasDeOro:0 };
     return map[name];
   }
-  state.jornadas.forEach(j => {
+  jornadasSrc.forEach(j => {
     j.equipos.forEach(eq => eq.jugadores.forEach(p => ensure(p).jornadasJugadas.add(j.id)));
     j.partidos.forEach(p => {
-      const eqIzq = getEquipo(j, p.equipoIzqId), eqDer = getEquipo(j, p.equipoDerId);
-      if(eqIzq) eqIzq.jugadores.forEach(name => {
-        ensure(name).partidosJugados += 1;
-        if(p.resultado === 'IZQ') ensure(name).partidosGanados += 1;
-      });
-      if(eqDer) eqDer.jugadores.forEach(name => {
-        ensure(name).partidosJugados += 1;
-        if(p.resultado === 'DER') ensure(name).partidosGanados += 1;
-      });
+      if(p.estado === 'finalizado'){
+        jugadoresDePartido(j, p, 'IZQ').forEach(name => {
+          ensure(name).partidosJugados += 1;
+          if(p.resultado === 'IZQ') ensure(name).partidosGanados += 1;
+        });
+        jugadoresDePartido(j, p, 'DER').forEach(name => {
+          ensure(name).partidosJugados += 1;
+          if(p.resultado === 'DER') ensure(name).partidosGanados += 1;
+        });
+      }
       p.goles.forEach(g => {
         ensure(g.jugador).goles += 1;
         if(g.asistencia) ensure(g.asistencia).asistencias += 1;
@@ -935,7 +1319,7 @@ function allTimeStats(){
     }
   });
   const arr = Object.values(map).map(s => {
-    const seq = playerResultSequence(s.nombre);
+    const seq = playerResultSequence(s.nombre, jornadasSrc);
     const streaks = computeStreaks(seq);
     return {
       ...s, jornadasJugadas: s.jornadasJugadas.size,
@@ -1001,12 +1385,13 @@ function insigniasGlobalesJugador(name){
 }
 
 /* ---------- Ficha individual de jugador ---------- */
-function fichaJugador(name){
-  const stats = allTimeStats();
+function fichaJugador(name, src){
+  src = src || state.jornadas;
+  const stats = allTimeStats(src);
   const s = stats.find(x=>x.nombre===name) || { nombre:name, goles:0, asistencias:0, amarillas:0, rojas:0, jornadasJugadas:0, partidosJugados:0, partidosGanados:0, promedio:0, rachaTipo:null, rachaCantidad:0, mejorRachaV:0, botasDeOro:0 };
 
   // Goles por jornada (para la gráfica), en orden cronológico
-  const finalizadas = state.jornadas.filter(j=>j.estado==='finalizado').sort((a,b)=>a.numero-b.numero);
+  const finalizadas = src.filter(j=>j.estado==='finalizado').slice().sort((a,b)=>a.numero-b.numero);
   const serieGoles = [];
   finalizadas.forEach(j=>{
     const jugó = j.equipos.some(e=>e.jugadores.includes(name));
@@ -1018,7 +1403,7 @@ function fichaJugador(name){
 
   // Compañeros más frecuentes y rivales más frecuentes
   const compas = {}, rivales = {};
-  state.jornadas.forEach(j=>{
+  src.forEach(j=>{
     const equipoPropio = j.equipos.find(e=>e.jugadores.includes(name));
     if(!equipoPropio) return;
     equipoPropio.jugadores.forEach(otro=>{
@@ -1037,8 +1422,9 @@ function fichaJugador(name){
 }
 
 /* ---------- Datos curiosos ---------- */
-function computeCuriosidades(){
-  const finalizadas = state.jornadas.filter(j=>j.estado==='finalizado');
+function computeCuriosidades(src){
+  src = src || state.jornadas;
+  const finalizadas = src.filter(j=>j.estado==='finalizado');
   const facts = [];
   if(finalizadas.length === 0) return facts;
 
@@ -1090,7 +1476,7 @@ function computeCuriosidades(){
     facts.push({icon:'⏱', html:`El partido más largo duró <b>${fmtClock(maxDur)}</b>: ${escapeHtml(eqI?.nombre||'?')} vs ${escapeHtml(eqD?.nombre||'?')} (jornada #${partidoMasLargo.j.numero}).`});
   }
 
-  const stats = allTimeStats();
+  const stats = allTimeStats(src);
   const masJornadas = stats.slice().sort((a,b)=>b.jornadasJugadas-a.jornadasJugadas)[0];
   if(masJornadas && masJornadas.jornadasJugadas>0) facts.push({icon:'📅', html:`<b>${escapeHtml(masJornadas.nombre)}</b> es quien más jornadas ha jugado: <b>${masJornadas.jornadasJugadas}</b>.`});
 
@@ -1105,16 +1491,28 @@ function computeCuriosidades(){
 }
 
 /* ---------- Renombrar jugador (sin perder estadísticas) ---------- */
-function renombrarJugador(oldName, newName){
-  const nuevo = (newName||'').trim();
-  if(!nuevo || nuevo === oldName) return;
-  const yaExiste = state.jugadoresFrecuentes.some(n => n.toLowerCase()===nuevo.toLowerCase() && n!==oldName);
-  if(yaExiste){ showToast('Ya existe un jugador habitual con ese nombre'); return; }
+function renombrarJugador(oldName, newName, opts){
+  const merge = !!(opts && opts.merge);
+  let nuevo = String(newName||'').replace(/\s+/g,' ').trim();
+  if(!nuevo || nuevo === oldName) return false;
 
-  state.jugadoresFrecuentes = state.jugadoresFrecuentes.map(n => n===oldName ? nuevo : n);
+  // ¿ya existe OTRO jugador equivalente a ese nombre?
+  const todos = new Set(state.jugadoresFrecuentes);
+  state.jornadas.forEach(j=>j.equipos.forEach(e=>e.jugadores.forEach(n=>todos.add(n))));
+  const choque = [...todos].find(n => n !== oldName && normNombre(n) === normNombre(nuevo));
+  if(choque){
+    if(!merge){ showToast('Ya existe "'+choque+'". Usa la Revisión de datos para unificarlos.'); return false; }
+    nuevo = choque; // se fusiona con el existente
+  }
+
+  const uniq = arr => arr.filter((n,i)=>arr.indexOf(n)===i);
+  const map = n => n===oldName ? nuevo : n;
+  state.jugadoresFrecuentes = uniq(state.jugadoresFrecuentes.map(map));
   state.jornadas.forEach(j=>{
-    j.equipos.forEach(eq=>{ eq.jugadores = eq.jugadores.map(n=>n===oldName?nuevo:n); });
+    j.equipos.forEach(eq=>{ eq.jugadores = uniq(eq.jugadores.map(map)); });
     j.partidos.forEach(p=>{
+      if(Array.isArray(p.jugadoresIzq)) p.jugadoresIzq = uniq(p.jugadoresIzq.map(map));
+      if(Array.isArray(p.jugadoresDer)) p.jugadoresDer = uniq(p.jugadoresDer.map(map));
       p.goles.forEach(g=>{
         if(g.jugador===oldName) g.jugador=nuevo;
         if(g.asistencia===oldName) g.asistencia=nuevo;
@@ -1123,7 +1521,8 @@ function renombrarJugador(oldName, newName){
     });
   });
   saveState();
-  showToast('Jugador renombrado: '+oldName+' → '+nuevo);
+  showToast(merge ? 'Unificados: '+oldName+' → '+nuevo : 'Jugador renombrado: '+oldName+' → '+nuevo);
+  return true;
 }
 
 
@@ -1133,6 +1532,13 @@ function render(){
   const oldModal = document.getElementById('modal-overlay');
   if(oldModal) oldModal.remove();
   if(!loaded){ app.innerHTML = '<div class="empty-state">Cargando datos…</div>'; return; }
+
+  if(tvMode){
+    app.innerHTML = renderTV();
+    const bx = document.getElementById('btn-tv-exit'); if(bx) bx.onclick = salirModoTV;
+    const bf = document.getElementById('btn-tv-full'); if(bf) bf.onclick = pantallaCompleta;
+    return;
+  }
 
   const j = getCurrentJornada();
   let html = '';
@@ -1144,6 +1550,7 @@ function render(){
   else if(activeTab === 'historial') html += renderHistorial();
   else if(activeTab === 'jugadores') html += renderJugadoresTab();
   else if(activeTab === 'curiosidades') html += renderCuriosidades();
+  else if(activeTab === 'comparar') html += renderComparar();
   else if(activeTab === 'ficha') html += renderFichaJugador(selectedJugador);
 
   if(isAdmin && activeTab === 'marcador') html += renderAdminZone();
@@ -1153,6 +1560,90 @@ function render(){
   attachHandlers();
 }
 
+/* ---------- Modo TV (pantalla grande, solo lectura) ---------- */
+let tvMode = (typeof location !== 'undefined') && new URLSearchParams(location.search).get('tv') === '1';
+let tvPartidoId = null, tvGolesPrev = 0, tvBannerUntil = 0, tvBannerTexto = '';
+function entrarModoTV(){
+  tvMode = true; tvPartidoId = null;
+  try{ if(navigator.wakeLock) navigator.wakeLock.request('screen').catch(()=>{}); }catch(e){}
+  render();
+}
+function salirModoTV(){
+  tvMode = false;
+  try{
+    if(document.fullscreenElement) document.exitFullscreen();
+    const u = new URL(location.href); u.searchParams.delete('tv'); history.replaceState(null,'',u.toString());
+  }catch(e){}
+  render();
+}
+function pantallaCompleta(){
+  try{ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); }catch(e){}
+}
+function renderTV(){
+  const j = getCurrentJornada();
+  const controles = `<div class="tv-controls"><button class="admin-btn" id="btn-tv-full">⛶ Pantalla completa</button><button class="admin-btn" id="btn-tv-exit">✕ Salir</button></div>`;
+  const marca = `<div class="tv-brand">PARTIDOS <span>LETRADO</span> APP</div>`;
+  const tablaHtml = jj => { const { conteo } = ganadoresJornada(jj);
+    return `<div class="tv-tabla">${jj.equipos.map(e=>`<div class="tv-tabla-item"><span class="jm-team-swatch" style="background:${e.color}"></span>${escapeHtml(e.nombre)}<b>${conteo[e.id]||0}</b></div>`).join('')}</div>`; };
+
+  if(j){
+    const p = getPartidoActual(j);
+    if(p){
+      const eqI = getEquipo(j,p.equipoIzqId), eqD = getEquipo(j,p.equipoDerId), eqE = p.equipoEsperaId ? getEquipo(j,p.equipoEsperaId) : null;
+      const gI = p.goles.filter(g=>g.equipoId===p.equipoIzqId).length, gD = p.goles.filter(g=>g.equipoId===p.equipoDerId).length;
+      const ultimos = p.goles.slice().sort((a,b)=>b.ts-a.ts);
+      // ¿cayó un gol nuevo? (solo si sube el total; borrar un gol no dispara el aviso)
+      if(tvPartidoId !== p.id){ tvPartidoId = p.id; tvGolesPrev = p.goles.length; }
+      else {
+        if(p.goles.length > tvGolesPrev && ultimos[0]){
+          const g = ultimos[0];
+          tvBannerUntil = Date.now()+6000; tvBannerTexto = '⚽ ¡GOL! '+g.jugador+' ('+nombreEquipoSeguro(j,g.equipoId)+')';
+          setTimeout(()=>{ if(tvMode) render(); }, 6100);
+        }
+        tvGolesPrev = p.goles.length;
+      }
+      const secs = elapsedSeconds(p.timer);
+      return `<div class="tv-wrap">${controles}${marca}
+        <div class="tv-status">Jornada ${j.numero} · Partido ${p.numero} · <span class="live-chip">EN VIVO</span></div>
+        <div class="tv-row">
+          <div class="tv-team"><div>${escapeHtml(eqI.nombre)}</div><div class="tv-bar" style="background:${eqI.color}"></div></div>
+          <div class="tv-score">${gI}</div><div class="tv-sep">:</div><div class="tv-score">${gD}</div>
+          <div class="tv-team"><div>${escapeHtml(eqD.nombre)}</div><div class="tv-bar" style="background:${eqD.color}"></div></div>
+        </div>
+        <div class="tv-clock" id="tv-clock">${fmtClock(secs)}</div>
+        <div class="tv-sub">a ${j.limiteGoles} goles${j.limiteTiempoMin?' o '+j.limiteTiempoMin+' min':''}${eqE?' · ⏳ espera: '+escapeHtml(eqE.nombre):''}</div>
+        ${tablaHtml(j)}
+        ${ultimos.length ? `<div class="tv-goles">${ultimos.slice(0,4).map(g=>`⚽ ${g.minuto}' <b>${escapeHtml(g.jugador)}</b> (${escapeHtml(nombreEquipoSeguro(j,g.equipoId))})`).join('<br>')}</div>` : ''}
+        ${Date.now() < tvBannerUntil ? `<div class="tv-banner">${escapeHtml(tvBannerTexto)}</div>` : ''}
+      </div>`;
+    }
+    if(j.proximoPartido){
+      const np = j.proximoPartido, a = getEquipo(j,np.izqId), b = getEquipo(j,np.derId), e = np.esperaId ? getEquipo(j,np.esperaId) : null;
+      return `<div class="tv-wrap">${controles}${marca}
+        <div class="tv-status">Jornada ${j.numero} · entre partidos</div>
+        <div class="tv-next">Próximo partido</div>
+        <div class="tv-row"><div class="tv-team"><div>${escapeHtml(a.nombre)}</div><div class="tv-bar" style="background:${a.color}"></div></div><div class="tv-sep">vs</div><div class="tv-team"><div>${escapeHtml(b.nombre)}</div><div class="tv-bar" style="background:${b.color}"></div></div></div>
+        ${e?`<div class="tv-sub">⏳ espera: ${escapeHtml(e.nombre)}</div>`:''}
+        ${tablaHtml(j)}</div>`;
+    }
+    return `<div class="tv-wrap">${controles}${marca}<div class="tv-status">Jornada ${j.numero}</div>${tablaHtml(j)}</div>`;
+  }
+
+  // sin jornada activa: resultado de la última jornada, o espera
+  const ultima = state.jornadas.filter(x=>x.estado==='finalizado').slice().sort((a,b)=>b.numero-a.numero)[0];
+  if(ultima){
+    const r = jornadaResumen(ultima);
+    return `<div class="tv-wrap">${controles}${marca}
+      <div class="tv-status">Última jornada · #${ultima.numero} · ${ultima.fecha}</div>
+      <div class="tv-next">${r.empateTotal?'🤝 Jornada empatada':'🏆 '+r.ganadores.map(g=>escapeHtml(g.nombre)).join(' y ')}</div>
+      ${tablaHtml(ultima)}
+      ${r.goleadores.length?`<div class="tv-goles">🥇 Goleador${r.goleadores.length>1?'es':''}: ${r.goleadores.map(g=>escapeHtml(g.nombre)+' ('+g.goles+')').join(', ')}</div>`:''}
+      <div class="tv-sub" style="margin-top:3vh;">Esperando la próxima jornada ⚽</div></div>`;
+  }
+  return `<div class="tv-wrap">${controles}${marca}<div class="tv-next">Esperando el primer partido ⚽</div></div>`;
+}
+function nombreEquipoSeguro(j, id){ const e = getEquipo(j,id); return e ? e.nombre : '?'; }
+
 function renderTopbar(){
   return `
   <div class="topbar">
@@ -1160,13 +1651,16 @@ function renderTopbar(){
       <div class="brand-name">Partidos <span>Letrado</span> APP</div>
       <div class="brand-sub">Fútbol familiar · cada 8 días</div>
     </div>
-    <button class="admin-btn ${isAdmin?'active':''}" id="btn-admin-toggle">
-      <span class="dot ${isAdmin?'on':''}"></span> ${isAdmin ? 'Admin activo' : 'Entrar como admin'}
-    </button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="admin-btn" id="btn-tv-open" title="Marcador en pantalla grande">📺 TV</button>
+      <button class="admin-btn ${isAdmin?'active':''}" id="btn-admin-toggle">
+        <span class="dot ${isAdmin?'on':''}"></span> ${isAdmin ? 'Admin activo' : 'Entrar como admin'}
+      </button>
+    </div>
   </div>`;
 }
 function renderTabs(){
-  const tabs = [ {id:'marcador', label:'⚽ Marcador'}, {id:'jugadores', label:'👥 Jugadores'}, {id:'goleadores', label:'🏆 Goleadores'}, {id:'historial', label:'📅 Historial'}, {id:'curiosidades', label:'🎲 Curiosidades'} ];
+  const tabs = [ {id:'marcador', label:'⚽ Marcador'}, {id:'jugadores', label:'👥 Jugadores'}, {id:'goleadores', label:'🏆 Goleadores'}, {id:'historial', label:'📅 Historial'}, {id:'curiosidades', label:'🎲 Curiosidades'}, {id:'comparar', label:'⚔️ Comparar'} ];
   const activeMatch = activeTab === 'ficha' ? '' : activeTab;
   return `<div class="tabs">${tabs.map(t=>`<button class="tab-btn ${activeMatch===t.id?'active':''}" data-tab="${t.id}">${t.label}</button>`).join('')}</div>`;
 }
@@ -1247,6 +1741,7 @@ function renderMarcador(j){
   html += renderTeamCard(j, p, eqIzq);
   html += renderTeamCard(j, p, eqDer);
   html += `</div>`;
+  html += renderAgregarJugadorEnVivo(j);
 
   // Log de goles del partido actual
   html += `<div class="card"><div class="card-title">📋 Goles de este partido</div>`;
@@ -1312,6 +1807,30 @@ function renderTeamCard(j, p, eq){
   return html;
 }
 
+let liveAddTeam = null;
+function renderAgregarJugadorEnVivo(j){
+  if(!isAdmin) return '';
+  if(!liveAddTeam || !getEquipo(j, liveAddTeam)) liveAddTeam = j.equipos[0].id;
+  const asignados = new Set(); j.equipos.forEach(e=>e.jugadores.forEach(n=>asignados.add(normNombre(n))));
+  const disponibles = state.jugadoresFrecuentes.filter(n => !asignados.has(normNombre(n)));
+  return `<div class="card">
+    <span class="eyebrow">Llegó alguien tarde o se sumó otro</span>
+    <div class="card-title" style="margin-top:2px;">➕ Agregar jugador a la jornada</div>
+    <label class="form-label">¿A qué equipo se une?</label>
+    <select class="txt-input" id="live-add-team" style="width:100%;">
+      ${j.equipos.map(e=>`<option value="${e.id}" ${e.id===liveAddTeam?'selected':''}>${escapeHtml(e.nombre)}</option>`).join('')}
+    </select>
+    ${disponibles.length>0 ? `<label class="form-label">Jugadores habituales (toca para sumarlo)</label>
+    <div class="swatch-row">${disponibles.map(n=>`<div class="chip-player" data-live-chip="${escapeHtml(n)}">${escapeHtml(n)}</div>`).join('')}</div>` : ''}
+    <label class="form-label">O escribe uno nuevo / invitado</label>
+    <div class="add-player-row">
+      <input class="txt-input" id="live-add-input" placeholder="Nombre del jugador" value="${escapeHtml(liveAddNombre)}">
+      <button class="btn btn-gold btn-sm" id="btn-live-add">Agregar</button>
+    </div>
+    <div class="hint">Solo contará en los partidos desde que se une; no se le acreditan los partidos anteriores.</div>
+  </div>`;
+}
+
 function renderEntrePartidos(j){
   const { conteo } = ganadoresJornada(j);
   const np = j.proximoPartido;
@@ -1339,6 +1858,7 @@ function renderEntrePartidos(j){
     html += `<div class="hint">Esperando que el admin inicie el siguiente partido o cierre la jornada.</div>`;
   }
   html += `</div>`;
+  html += renderAgregarJugadorEnVivo(j);
   return html;
 }
 
@@ -1447,16 +1967,37 @@ function renderJugadoresTab(){
       </div>`).join('');
   }
   html += `</div></div>`;
+  if(isAdmin) html += renderRevisionDatos();
   return html;
 }
 
+function renderRevisionDatos(){
+  auditCache = auditarDatos();
+  let h = `<div class="card">
+    <span class="eyebrow">Para que los números sean confiables</span>
+    <div class="card-title" style="margin-top:2px;">🔍 Revisión de datos</div>`;
+  if(auditCache.length === 0){
+    h += `<div class="hint" style="color:var(--green-go);">✓ Todo en orden: no se detectaron nombres duplicados ni jornadas raras.</div>`;
+  } else {
+    h += auditCache.map((it,i)=>`<div class="fact-card">
+      ${escapeHtml(it.texto)}
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+        ${it.tipo==='duplicado' ? `<button class="btn btn-gold btn-sm" data-audit-unify="${i}">Unificar en «${escapeHtml(it.destino)}»</button>` : ''}
+        ${it.partidoId ? `<button class="btn btn-gold btn-sm" data-edit-partido="${it.jornadaId}|${it.partidoId}">✏️ Corregir partido</button>` : ''}
+        ${(it.tipo==='sin_goles'||it.tipo==='abandonada'||it.tipo==='sin_resultado') ? `<button class="btn btn-danger btn-sm" data-del-jornada="${it.jornadaId}">Eliminar jornada</button>` : ''}
+      </div></div>`).join('');
+  }
+  return h + `</div>`;
+}
+
 function renderGoleadores(){
-  const stats = allTimeStats();
+  const stats = allTimeStats(jornadasEnPeriodo());
   if(stats.length === 0){
-    return `<div class="card"><div class="empty-state"><span class="big">Sin datos todavía</span>Cuando se jueguen jornadas, aquí verás la tabla histórica de goleadores.</div></div>`;
+    return `<div class="card">${renderSelectorPeriodo()}<div class="empty-state"><span class="big">Sin datos ${periodoFiltro==='todo'?'todavía':'en este periodo'}</span>${periodoFiltro==='todo'?'Cuando se jueguen jornadas, aquí verás la tabla histórica de goleadores.':'Prueba con otro periodo para ver jornadas anteriores.'}</div></div>`;
   }
   return `<div class="card">
-    <div class="card-title">🏆 Tabla histórica</div>
+    ${renderSelectorPeriodo()}
+    <div class="card-title">🏆 ${periodoFiltro==='todo'?'Tabla histórica':'Tabla del periodo'}</div>
     <div class="hint">La racha se calcula por jugador (no por equipo), ya que los equipos cambian cada jornada.</div>
     <div style="overflow-x:auto;margin-top:10px;">
     <table class="stats-table">
@@ -1482,11 +2023,11 @@ function renderGoleadores(){
 }
 
 function renderHistorial(){
-  const finalizadas = state.jornadas.filter(j=>j.estado==='finalizado').sort((a,b)=>b.numero-a.numero);
+  const finalizadas = jornadasEnPeriodo().filter(j=>j.estado==='finalizado').slice().sort((a,b)=>b.numero-a.numero);
   if(finalizadas.length === 0){
-    return `<div class="card"><div class="empty-state"><span class="big">Aún no hay jornadas finalizadas</span>Cuando termine una jornada, quedará guardada aquí para siempre.</div></div>`;
+    return `<div class="card">${renderSelectorPeriodo()}<div class="empty-state"><span class="big">${periodoFiltro==='todo'?'Aún no hay jornadas finalizadas':'Sin jornadas en este periodo'}</span>${periodoFiltro==='todo'?'Cuando termine una jornada, quedará guardada aquí para siempre.':'Prueba con otro periodo.'}</div></div>`;
   }
-  return `<div class="card"><div class="card-title">📅 Jornadas jugadas</div>
+  return `<div class="card">${renderSelectorPeriodo()}<div class="card-title">📅 Jornadas jugadas</div>
     ${finalizadas.map(j => {
       const { conteo, ganadores, empateTotal } = ganadoresJornada(j);
       const r = jornadaResumen(j);
@@ -1514,7 +2055,7 @@ function renderHistorial(){
           ${j.partidos.map(p=>{
             const eqIzq=getEquipo(j,p.equipoIzqId), eqDer=getEquipo(j,p.equipoDerId);
             const gI=p.goles.filter(g=>g.equipoId===p.equipoIzqId).length, gD=p.goles.filter(g=>g.equipoId===p.equipoDerId).length;
-            return `<div class="hist-partido-row">Partido ${p.numero}: ${escapeHtml(eqIzq.nombre)} ${gI} - ${gD} ${escapeHtml(eqDer.nombre)} · ${fmtClock(elapsedSeconds(p.timer))} ${p.resultado==='EMPATE'?'(empate)':(p.definidoPorPenales?'(definido por penales)':'')}</div>`;
+            return `<div class="hist-partido-row">Partido ${p.numero}: ${escapeHtml(eqIzq.nombre)} ${gI} - ${gD} ${escapeHtml(eqDer.nombre)} · ${fmtClock(elapsedSeconds(p.timer))} ${p.resultado==='EMPATE'?'(empate)':(p.definidoPorPenales?'(definido por penales)':'')}${isAdmin?` <button class="icon-btn" style="margin-left:6px;" data-edit-partido="${j.id}|${p.id}">✏️ Corregir</button>`:''}</div>`;
           }).join('')}
 
           ${r.goleadores.length>0 ? `<span class="eyebrow" style="margin-top:12px;display:block;">Goleadores de la jornada</span>
@@ -1523,6 +2064,7 @@ function renderHistorial(){
           ${todasTarjetas.length>0 ? `<span class="eyebrow" style="display:block;">Tarjetas</span>
           <div style="font-size:12.5px;color:var(--ink-dim);margin-bottom:10px;">${todasTarjetas.map(c=>`${c.tipo==='amarilla'?'🟨':'🟥'} ${escapeHtml(c.jugador)}`).join(', ')}</div>` : ''}
 
+          ${isAdmin ? `<div style="margin-top:12px;"><button class="btn btn-danger btn-sm" data-del-jornada="${j.id}">🗑 Eliminar esta jornada</button></div>` : ''}
           ${(ins.murallas.length>0 || ins.rachasRotas.length>0) ? `<span class="eyebrow" style="display:block;">Insignias de la jornada</span>
           <div class="medallion-row" style="margin-top:4px;margin-bottom:4px;">
             ${ins.murallas.map(e=>`<div class="medallion"><span class="medal-icon">🧱</span>${escapeHtml(e.nombre)} — muralla (ganó todos sus partidos)</div>`).join('')}
@@ -1534,13 +2076,102 @@ function renderHistorial(){
   </div>`;
 }
 
+/* ---------- Comparador cara a cara ---------- */
+let compareA = '', compareB = '';
+function compararJugadores(a, b, src){
+  src = src || state.jornadas;
+  const stats = allTimeStats(src);
+  const vacio = n => ({ nombre:n, goles:0, asistencias:0, amarillas:0, rojas:0, jornadasJugadas:0, partidosJugados:0, partidosGanados:0, promedio:0, mejorRachaV:0, botasDeOro:0 });
+  const sa = stats.find(x=>x.nombre===a) || vacio(a);
+  const sb = stats.find(x=>x.nombre===b) || vacio(b);
+  const r = { sa, sb,
+    juntos:{ jornadas:0, V:0, E:0, D:0, partidos:0, partidosGanados:0 },
+    rivales:{ jornadas:0, aGana:0, bGana:0, E:0, partidos:0, aGanaP:0, bGanaP:0, EP:0 } };
+  src.filter(j=>j.estado==='finalizado').forEach(j=>{
+    const ea = j.equipos.find(e=>e.jugadores.includes(a)), eb = j.equipos.find(e=>e.jugadores.includes(b));
+    if(!ea || !eb) return;
+    const { ganadores, empateTotal } = ganadoresJornada(j);
+    if(ea.id === eb.id){
+      r.juntos.jornadas++;
+      if(empateTotal) r.juntos.E++; else if(ganadores.some(g=>g.id===ea.id)) r.juntos.V++; else r.juntos.D++;
+    } else {
+      r.rivales.jornadas++;
+      const aw = !empateTotal && ganadores.some(g=>g.id===ea.id), bw = !empateTotal && ganadores.some(g=>g.id===eb.id);
+      if(aw && !bw) r.rivales.aGana++; else if(bw && !aw) r.rivales.bGana++; else r.rivales.E++;
+    }
+  });
+  src.forEach(j=>j.partidos.forEach(p=>{
+    if(p.estado !== 'finalizado') return;
+    const lado = n => jugadoresDePartido(j,p,'IZQ').includes(n) ? 'IZQ' : (jugadoresDePartido(j,p,'DER').includes(n) ? 'DER' : null);
+    const la = lado(a), lb = lado(b);
+    if(!la || !lb) return;
+    if(la === lb){ r.juntos.partidos++; if(p.resultado === la) r.juntos.partidosGanados++; }
+    else {
+      r.rivales.partidos++;
+      if(p.resultado === la) r.rivales.aGanaP++; else if(p.resultado === lb) r.rivales.bGanaP++; else r.rivales.EP++;
+    }
+  }));
+  return r;
+}
+
+function renderComparar(){
+  const stats = allTimeStats(jornadasEnPeriodo());
+  const nombres = [...new Set([...stats.map(s=>s.nombre), ...state.jugadoresFrecuentes])].sort((x,y)=>x.localeCompare(y,'es'));
+  if(nombres.length < 2){
+    return `<div class="card"><div class="empty-state"><span class="big">Faltan jugadores</span>Necesitas al menos dos jugadores registrados para compararlos.</div></div>`;
+  }
+  if(!nombres.includes(compareA)) compareA = nombres[0];
+  if(!nombres.includes(compareB) || compareB === compareA) compareB = nombres.find(n=>n!==compareA);
+  const opts = sel => nombres.map(n=>`<option value="${escapeHtml(n)}" ${n===sel?'selected':''}>${escapeHtml(n)}</option>`).join('');
+  const c = compararJugadores(compareA, compareB, jornadasEnPeriodo());
+  const pct = x => x.partidosJugados ? Math.round(x.partidosGanados/x.partidosJugados*100) : 0;
+  // [etiqueta, valA, valB, mayor_es_mejor, formateo]
+  const filas = [
+    ['Goles', c.sa.goles, c.sb.goles, true],
+    ['Asistencias', c.sa.asistencias, c.sb.asistencias, true],
+    ['Jornadas jugadas', c.sa.jornadasJugadas, c.sb.jornadasJugadas, true],
+    ['Partidos ganados', c.sa.partidosGanados, c.sb.partidosGanados, true],
+    ['% de victorias', pct(c.sa), pct(c.sb), true, v=>v+'%'],
+    ['Goles por jornada', c.sa.promedio, c.sb.promedio, true, v=>v.toFixed(2)],
+    ['Mejor racha de victorias', c.sa.mejorRachaV, c.sb.mejorRachaV, true],
+    ['Botas de oro', c.sa.botasDeOro, c.sb.botasDeOro, true],
+    ['Tarjetas', c.sa.amarillas + c.sa.rojas, c.sb.amarillas + c.sb.rojas, false]
+  ];
+  const fila = ([lbl,va,vb,mayor,fmt]) => {
+    const f = fmt || (v=>v);
+    const mejorA = mayor ? va>vb : va<vb, mejorB = mayor ? vb>va : vb<va;
+    return `<div class="cmp-row"><span class="cmp-val ${mejorA?'cmp-win':''}">${f(va)}</span><span class="cmp-lbl">${lbl}</span><span class="cmp-val ${mejorB?'cmp-win':''}">${f(vb)}</span></div>`;
+  };
+  const A = escapeHtml(compareA), B = escapeHtml(compareB);
+  return `<div class="card">
+    ${renderSelectorPeriodo()}
+    <span class="eyebrow">Cara a cara</span>
+    <div class="card-title" style="margin-top:2px;">⚔️ Comparar jugadores</div>
+    <div class="cmp-selects">
+      <select class="txt-input" id="cmp-a">${opts(compareA)}</select>
+      <span class="cmp-vs">VS</span>
+      <select class="txt-input" id="cmp-b">${opts(compareB)}</select>
+    </div>
+    <div class="cmp-table">${filas.map(fila).join('')}</div>
+
+    <span class="eyebrow" style="display:block;margin-top:18px;">Cuando han coincidido</span>
+    <div class="fact-card"><span class="fact-icon">🤝</span>Como <b>compañeros</b>: ${c.juntos.jornadas>0
+      ? `han jugado <b>${c.juntos.jornadas}</b> jornada(s) en el mismo equipo (ganaron <b>${c.juntos.V}</b>, empataron <b>${c.juntos.E}</b>, perdieron <b>${c.juntos.D}</b>) y <b>${c.juntos.partidos}</b> partido(s) juntos, con <b>${c.juntos.partidosGanados}</b> victoria(s).`
+      : 'nunca han estado en el mismo equipo en el periodo elegido.'}</div>
+    <div class="fact-card"><span class="fact-icon">⚔️</span>Como <b>rivales</b>: ${c.rivales.jornadas>0
+      ? `se han enfrentado en <b>${c.rivales.jornadas}</b> jornada(s): <b>${A}</b> ganó <b>${c.rivales.aGana}</b>, <b>${B}</b> ganó <b>${c.rivales.bGana}</b>, igualadas <b>${c.rivales.E}</b>. En partidos directos (${c.rivales.partidos}): <b>${A}</b> ${c.rivales.aGanaP} – ${c.rivales.bGanaP} <b>${B}</b>${c.rivales.EP?` (${c.rivales.EP} empate(s))`:''}.`
+      : 'nunca han estado en equipos rivales en el periodo elegido.'}</div>
+  </div>`;
+}
+
 function renderCuriosidades(){
-  const facts = computeCuriosidades();
+  const facts = computeCuriosidades(jornadasEnPeriodo());
   if(facts.length === 0){
-    return `<div class="card"><div class="empty-state"><span class="big">Todavía no hay suficientes datos</span>A medida que se jueguen más jornadas, aquí irán apareciendo datos curiosos del grupo.</div></div>`;
+    return `<div class="card">${renderSelectorPeriodo()}<div class="empty-state"><span class="big">Todavía no hay suficientes datos</span>${periodoFiltro==='todo'?'A medida que se jueguen más jornadas, aquí irán apareciendo datos curiosos del grupo.':'No hay jornadas finalizadas en este periodo.'}</div></div>`;
   }
   return `<div class="card">
-    <span class="eyebrow">Con base en todas las jornadas jugadas</span>
+    ${renderSelectorPeriodo()}
+    <span class="eyebrow">Con base en ${periodoFiltro==='todo'?'todas las jornadas jugadas':'las jornadas del periodo elegido'}</span>
     <div class="card-title" style="margin-top:2px;">🎲 Datos curiosos</div>
     ${facts.map(f=>`<div class="fact-card"><span class="fact-icon">${f.icon}</span>${f.html}</div>`).join('')}
   </div>`;
@@ -1564,10 +2195,11 @@ function svgGraficaGoles(serie){
 
 function renderFichaJugador(name){
   if(!name) return `<div class="card"><div class="empty-state">Selecciona un jugador para ver su ficha.</div></div>`;
-  const f = fichaJugador(name);
+  const f = fichaJugador(name, jornadasEnPeriodo());
   const s = f.stats;
   let html = `<button class="back-link" id="btn-volver-ficha">← Volver</button>
   <div class="card">
+    ${renderSelectorPeriodo()}
     <div class="player-header">
       <div class="player-avatar">${escapeHtml(name.charAt(0).toUpperCase())}</div>
       <div>
@@ -1583,7 +2215,7 @@ function renderFichaJugador(name){
       <div class="stat-pill"><div class="stat-pill-val">${s.promedio.toFixed(2)}</div><div class="stat-pill-lbl">Prom./jornada</div></div>
     </div>
 
-    ${f.badges.length>0 ? `<span class="eyebrow">Insignias</span>
+    ${f.badges.length>0 ? `<span class="eyebrow">Insignias (histórico completo)</span>
     <div class="medallion-row">${f.badges.map(b=>`<div class="medallion"><span class="medal-icon">${b.icon}</span>${escapeHtml(b.texto)}</div>`).join('')}</div>` : ''}
 
     <span class="eyebrow" style="display:block;margin-top:16px;">Goles por jornada</span>
@@ -1621,7 +2253,17 @@ function renderAdminZone(){
     <div class="card-title">⚙️ Panel admin</div>
     <div class="hint">Solo tú puedes editar el marcador. Los demás familiares ven todo automáticamente en modo lectura.</div>
     ${diag}
-    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+    <span class="eyebrow" style="display:block;margin-top:16px;">Respaldo de seguridad</span>
+    <div class="hint" style="margin-top:2px;">Descarga una copia de todo (jugadores, jornadas, goles, tarjetas). Excel para consultarlo; JSON para poder restaurarlo.</div>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-gold btn-sm" id="btn-export-xlsx">📊 Descargar Excel</button>
+      <button class="btn btn-outline btn-sm" id="btn-export-json">💾 Respaldo (JSON)</button>
+      <button class="btn btn-outline btn-sm" id="btn-restaurar">♻️ Restaurar respaldo</button>
+      <input type="file" id="input-restaurar" accept=".json,application/json" style="display:none">
+    </div>
+    <span class="eyebrow" style="display:block;margin-top:16px;">Modo TV</span>
+    <div class="hint" style="margin-top:2px;">Marcador en pantalla grande, solo lectura. Ábrelo con el botón 📺 de arriba o con este enlace: <b>${escapeHtml(location.origin+location.pathname)}?tv=1</b></div>
+    <div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn btn-outline btn-sm" id="btn-logout-admin">Salir del modo admin</button>
       <button class="btn btn-danger btn-sm" id="btn-reset-all">Borrar todos los datos</button>
     </div>
@@ -1723,6 +2365,8 @@ function renderModal(){
         <button class="btn btn-gold" id="btn-modal-cerrar-resumen">Cerrar</button>
       </div>
     </div>`;
+  } else if(modal.type === 'editar-partido'){
+    wrap.innerHTML = htmlEditarPartido();
   } else if(modal.type === 'rename-jugador'){
     wrap.innerHTML = `<div class="modal-box">
       <div class="modal-title">Editar nombre</div>
@@ -1770,6 +2414,19 @@ function renderModal(){
   wrap.querySelectorAll('[data-resultado-penales]').forEach(el=>{
     el.onclick = () => resolverPenales(el.getAttribute('data-resultado-penales'));
   });
+  if(modal && modal.type === 'editar-partido'){
+    wrap.querySelectorAll('[data-fix-res]').forEach(el=>{ el.onclick = () => corregirResultado(el.getAttribute('data-fix-res')); });
+    const pen = wrap.querySelector('#fix-penales'); if(pen) pen.onclick = corregirPenales;
+    const gj = wrap.querySelector('#fix-gol-jugador'); if(gj) gj.onchange = e => { modal.golJugador = e.target.value; modal.golAsist=''; render(); };
+    const ga = wrap.querySelector('#fix-gol-asist'); if(ga) ga.onchange = e => { modal.golAsist = e.target.value; };
+    const gm = wrap.querySelector('#fix-gol-min'); if(gm) gm.oninput = e => { modal.golMinuto = e.target.value; };
+    const bg = wrap.querySelector('#btn-fix-add-gol'); if(bg) bg.onclick = agregarGolManual;
+    wrap.querySelectorAll('[data-fix-del-gol]').forEach(el=>{ el.onclick = () => borrarGolManual(el.getAttribute('data-fix-del-gol')); });
+    const cj = wrap.querySelector('#fix-card-jugador'); if(cj) cj.onchange = e => { modal.cardJugador = e.target.value; };
+    const ct = wrap.querySelector('#fix-card-tipo'); if(ct) ct.onchange = e => { modal.cardTipo = e.target.value; };
+    const bc = wrap.querySelector('#btn-fix-add-card'); if(bc) bc.onclick = agregarTarjetaManual;
+    wrap.querySelectorAll('[data-fix-del-card]').forEach(el=>{ el.onclick = () => borrarTarjetaManual(el.getAttribute('data-fix-del-card')); });
+  }
   const renameInput = document.getElementById('input-rename');
   const renameConfirmBtn = document.getElementById('btn-modal-rename-confirm');
   if(renameInput && renameConfirmBtn){
@@ -1783,6 +2440,8 @@ function renderModal(){
 function attachHandlers(){
   const app = document.getElementById('app');
 
+  const tvOpen = document.getElementById('btn-tv-open');
+  if(tvOpen) tvOpen.onclick = entrarModoTV;
   const adminToggle = document.getElementById('btn-admin-toggle');
   if(adminToggle) adminToggle.onclick = () => { isAdmin ? logoutAdmin() : openAdminModal(); };
 
@@ -1876,6 +2535,43 @@ function attachHandlers(){
   app.querySelectorAll('[data-open-ficha]').forEach(el=>{
     el.onclick = () => abrirFichaJugador(el.getAttribute('data-open-ficha'));
   });
+  const liveTeamSel = document.getElementById('live-add-team');
+  if(liveTeamSel) liveTeamSel.onchange = e => { liveAddTeam = e.target.value; };
+  const liveInput = document.getElementById('live-add-input');
+  if(liveInput){
+    liveInput.oninput = e => { liveAddNombre = e.target.value; };
+    liveInput.addEventListener('keydown', e => { if(e.key==='Enter') agregarJugadorEnVivo(liveAddTeam, liveInput.value); });
+  }
+  const btnLiveAdd = document.getElementById('btn-live-add');
+  if(btnLiveAdd) btnLiveAdd.onclick = () => agregarJugadorEnVivo(liveAddTeam, document.getElementById('live-add-input').value);
+  app.querySelectorAll('[data-live-chip]').forEach(el=>{
+    el.onclick = () => agregarJugadorEnVivo(liveAddTeam, el.getAttribute('data-live-chip'));
+  });
+  app.querySelectorAll('[data-audit-unify]').forEach(el=>{
+    el.onclick = () => {
+      const it = auditCache[parseInt(el.getAttribute('data-audit-unify'),10)]; if(!it) return;
+      it.nombres.filter(n=>n!==it.destino).forEach(n => renombrarJugador(n, it.destino, {merge:true}));
+      render();
+    };
+  });
+  app.querySelectorAll('[data-edit-partido]').forEach(el=>{
+    el.onclick = ev => { ev.stopPropagation(); const [jId,pId] = el.getAttribute('data-edit-partido').split('|'); abrirEditarPartido(jId,pId); };
+  });
+  app.querySelectorAll('[data-del-jornada]').forEach(el=>{
+    el.onclick = ev => { ev.stopPropagation(); eliminarJornada(el.getAttribute('data-del-jornada')); };
+  });
+  const cmpA = document.getElementById('cmp-a'), cmpB = document.getElementById('cmp-b');
+  if(cmpA) cmpA.onchange = e => { compareA = e.target.value; render(); };
+  if(cmpB) cmpB.onchange = e => { compareB = e.target.value; render(); };
+  const bx = document.getElementById('btn-export-xlsx'); if(bx) bx.onclick = exportarExcel;
+  const bj = document.getElementById('btn-export-json'); if(bj) bj.onclick = exportarJSON;
+  const br = document.getElementById('btn-restaurar'), ir = document.getElementById('input-restaurar');
+  if(br && ir){
+    br.onclick = () => ir.click();
+    ir.onchange = e => { const f = e.target.files && e.target.files[0]; if(f) restaurarDesdeArchivo(f); };
+  }
+  const selPeriodo = document.getElementById('sel-periodo');
+  if(selPeriodo) selPeriodo.onchange = e => { periodoFiltro = e.target.value; render(); };
   const btnVolverFicha = document.getElementById('btn-volver-ficha');
   if(btnVolverFicha) btnVolverFicha.onclick = () => { activeTab = fichaOrigenTab; render(); };
 
@@ -1884,16 +2580,22 @@ function attachHandlers(){
   const btnResetAll = document.getElementById('btn-reset-all');
   if(btnResetAll) btnResetAll.onclick = () => {
     modal = { type:'confirm', title:'¿Borrar todos los datos?', text:'Se eliminará todo el historial de jornadas, goles y estadísticas. Esta acción no se puede deshacer.',
-      onConfirm: () => { state = {currentJornadaId:null, jornadas:[]}; modal=null; saveState(); render(); } };
+      onConfirm: () => { state = normalizeState({}); modal=null; saveState(); render(); } };
     render();
   };
 }
 
 /* ---------- Init ---------- */
 loadState();
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && tvMode) salirModoTV(); });
 setInterval(() => {
   const j = getCurrentJornada();
   const p = getPartidoActual(j);
+  if(tvMode){
+    const tc = document.getElementById('tv-clock');
+    if(tc && p) tc.textContent = fmtClock(elapsedSeconds(p.timer));
+    return;
+  }
   if(p && p.timer.running && activeTab === 'marcador' && !modal){
     const clockEl = document.querySelector('.jm-clock');
     if(clockEl){
